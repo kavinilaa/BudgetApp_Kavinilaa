@@ -32,15 +32,29 @@ public class AuthService {
             throw new RuntimeException("Email already exists");
         }
         
+        // Generate username from email if not provided
+        String username = request.getEmail().split("@")[0];
+        int counter = 1;
+        String originalUsername = username;
+        
+        // Ensure username is unique
+        while (userRepository.findByUsername(username).isPresent()) {
+            username = originalUsername + counter;
+            counter++;
+        }
+        
         User user = new User();
+        user.setUsername(username);
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setCreatedAt(java.time.LocalDateTime.now());
+        user.setUpdatedAt(java.time.LocalDateTime.now());
         
         User savedUser = userRepository.save(user);
         String token = jwtUtil.generateToken(savedUser.getEmail());
         
-        return new AuthResponse(token, "Registration successful");
+        return new AuthResponse(token, "Registration successful", savedUser.getUsername());
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -52,7 +66,7 @@ public class AuthService {
         }
         
         String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponse(token, "Login successful");
+        return new AuthResponse(token, "Login successful", user.getUsername());
     }
 
     public long getUserCount() {

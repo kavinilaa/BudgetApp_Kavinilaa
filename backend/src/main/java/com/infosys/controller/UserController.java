@@ -2,8 +2,7 @@ package com.infosys.controller;
 
 import com.infosys.model.User;
 import com.infosys.model.Profile;
-import com.infosys.repository.UserRepository;
-import com.infosys.repository.ProfileRepository;
+import com.infosys.repository.*;
 import com.infosys.config.JwtUtil;
 import com.infosys.dto.ProfileRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +26,18 @@ public class UserController {
     
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private IncomeRepository incomeRepository;
+    
+    @Autowired
+    private ExpenseRepository expenseRepository;
+    
+    @Autowired
+    private BudgetRepository budgetRepository;
+    
+    @Autowired
+    private SavingsGoalRepository savingsGoalRepository;
 
     @GetMapping("/profile")
     @Operation(summary = "Get user profile", description = "Retrieve user profile information")
@@ -79,6 +90,70 @@ public class UserController {
             return ResponseEntity.ok(new MessageResponse("Profile updated successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+    
+    @DeleteMapping("/reset-data")
+    @Operation(summary = "Reset all user data", description = "Delete all transactions, budgets, and savings goals for the user")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<?> resetUserData(@RequestHeader("Authorization") String token) {
+        try {
+            System.out.println("Reset data endpoint called");
+            String jwt = token.substring(7);
+            String email = jwtUtil.extractEmail(jwt);
+            System.out.println("User email: " + email);
+            
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            Long userId = user.getId();
+            System.out.println("User ID: " + userId);
+            
+            // Delete all user's financial data
+            System.out.println("Deleting incomes...");
+            incomeRepository.deleteByUserId(userId);
+            System.out.println("Deleting expenses...");
+            expenseRepository.deleteByUserId(userId);
+            System.out.println("Deleting budgets...");
+            budgetRepository.deleteByUserId(userId);
+            System.out.println("Deleting savings goals...");
+            savingsGoalRepository.deleteByUserId(userId);
+            System.out.println("All data deleted successfully");
+            
+            return ResponseEntity.ok(new MessageResponse("All data has been reset successfully"));
+        } catch (Exception e) {
+            System.err.println("Error resetting data: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(new MessageResponse("Error resetting data: " + e.getMessage()));
+        }
+    }
+    
+    @DeleteMapping("/delete-account")
+    @Operation(summary = "Delete user account", description = "Permanently delete user account and all associated data")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<?> deleteAccount(@RequestHeader("Authorization") String token) {
+        try {
+            String jwt = token.substring(7);
+            String email = jwtUtil.extractEmail(jwt);
+            
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            Long userId = user.getId();
+            
+            // Delete all user's data
+            incomeRepository.deleteByUserId(userId);
+            expenseRepository.deleteByUserId(userId);
+            budgetRepository.deleteByUserId(userId);
+            savingsGoalRepository.deleteByUserId(userId);
+            profileRepository.findByUserId(userId).ifPresent(profile -> profileRepository.delete(profile));
+            
+            // Finally delete the user account
+            userRepository.delete(user);
+            
+            return ResponseEntity.ok(new MessageResponse("Account deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error deleting account: " + e.getMessage()));
         }
     }
     

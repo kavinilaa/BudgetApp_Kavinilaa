@@ -130,6 +130,87 @@ const Profile = () => {
     }
   };
 
+  const handleResetData = async () => {
+    const confirmed = window.confirm(
+      '⚠️ WARNING: This will delete ALL your transactions, budgets, and financial records.\n\nYour profile will remain, but all financial data will be lost permanently.\n\nAre you absolutely sure you want to continue?'
+    );
+    
+    if (!confirmed) return;
+    
+    const doubleConfirm = window.prompt(
+      'Type "RESET" in capital letters to confirm this action:'
+    );
+    
+    if (doubleConfirm !== 'RESET') {
+      alert('Reset cancelled. Text did not match.');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:9090/api/user/reset-data', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert('✅ All data has been reset successfully. Redirecting to dashboard...');
+        window.location.href = '/dashboard';
+      } else {
+        throw new Error(data.message || 'Failed to reset data');
+      }
+    } catch (error) {
+      console.error('Error resetting data:', error);
+      alert('❌ Error resetting data: ' + error.message);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      '🚨 FINAL WARNING: This will PERMANENTLY delete your entire account.\n\n- All your data will be erased\n- Your profile will be deleted\n- You will not be able to recover your account\n\nAre you absolutely sure?'
+    );
+    
+    if (!confirmed) return;
+    
+    const doubleConfirm = window.prompt(
+      'Type "DELETE MY ACCOUNT" in capital letters to confirm permanent deletion:'
+    );
+    
+    if (doubleConfirm !== 'DELETE MY ACCOUNT') {
+      alert('Account deletion cancelled. Text did not match.');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:9090/api/user/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert('✅ Your account has been deleted. You will be logged out now.');
+        localStorage.clear();
+        window.location.href = '/login';
+      } else {
+        throw new Error(data.message || 'Failed to delete account');
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('❌ Error deleting account: ' + error.message);
+    }
+  };
+
   if (!user) return <div className="loading">Loading...</div>;
 
   return (
@@ -275,6 +356,72 @@ const Profile = () => {
             <div className="info-item">
               <label>Account Status</label>
               <span className="status-active">Active</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="profile-section" style={{ borderTop: '3px solid #ff4444' }}>
+          <h2 style={{ color: '#ff4444' }}>⚠️ Danger Zone</h2>
+          <p style={{ color: '#666', marginBottom: '20px' }}>These actions are irreversible. Please be certain before proceeding.</p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ 
+              padding: '20px', 
+              background: '#fff3cd', 
+              borderRadius: '8px', 
+              border: '1px solid #ffc107' 
+            }}>
+              <h3 style={{ margin: '0 0 10px 0', color: '#856404' }}>Reset All Data</h3>
+              <p style={{ margin: '0 0 15px 0', color: '#856404', fontSize: '14px' }}>
+                This will delete all your transactions, budgets, and financial records. Your profile information will be preserved.
+              </p>
+              <button 
+                onClick={handleResetData}
+                style={{
+                  padding: '10px 20px',
+                  background: '#ffc107',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#e0a800'}
+                onMouseOut={(e) => e.target.style.background = '#ffc107'}
+              >
+                🗑️ Reset All Data
+              </button>
+            </div>
+
+            <div style={{ 
+              padding: '20px', 
+              background: '#f8d7da', 
+              borderRadius: '8px', 
+              border: '1px solid #f5c2c7' 
+            }}>
+              <h3 style={{ margin: '0 0 10px 0', color: '#842029' }}>Delete Account</h3>
+              <p style={{ margin: '0 0 15px 0', color: '#842029', fontSize: '14px' }}>
+                This will permanently delete your account and all associated data. This action cannot be undone.
+              </p>
+              <button 
+                onClick={handleDeleteAccount}
+                style={{
+                  padding: '10px 20px',
+                  background: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#bb2d3b'}
+                onMouseOut={(e) => e.target.style.background = '#dc3545'}
+              >
+                ❌ Delete Account Permanently
+              </button>
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import { Line, Bar, Pie } from 'react-chartjs-2';
+import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import API from "../services/api";
@@ -36,6 +36,9 @@ function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('6months');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [transactionType, setTransactionType] = useState('all'); // all, income, expense
+  const [incomeExpenseChartType, setIncomeExpenseChartType] = useState('bar'); // bar, line
+  const [categoryChartType, setCategoryChartType] = useState('pie'); // pie, doughnut
   const [analyticsData, setAnalyticsData] = useState({
     monthlySpending: { labels: [], data: [] },
     categoryBreakdown: { labels: [], data: [] },
@@ -49,6 +52,8 @@ function AnalyticsPage() {
       topSpendingCategory: 'None'
     }
   });
+  const [transactions, setTransactions] = useState([]);
+  const [filteredSummary, setFilteredSummary] = useState({ income: 0, expense: 0, net: 0 });
   const navigate = useNavigate();
 
   const fetchAnalyticsData = async () => {
@@ -61,12 +66,14 @@ function AnalyticsPage() {
 
       const headers = { Authorization: `Bearer ${token}` };
       
-      // Fetch all analytics data
-      const [monthlyRes, categoryRes, incomeVsExpenseRes, summaryRes] = await Promise.all([
+      // Fetch all analytics data including transactions
+      const [monthlyRes, categoryRes, incomeVsExpenseRes, summaryRes, incomesRes, expensesRes] = await Promise.all([
         API.get('/analytics/monthly-spending', { headers }),
         API.get('/analytics/category-breakdown', { headers }),
         API.get('/analytics/income-vs-expenses', { headers }),
-        API.get('/analytics/summary', { headers })
+        API.get('/analytics/summary', { headers }),
+        API.get('/transactions/incomes', { headers }),
+        API.get('/transactions/expenses', { headers })
       ]);
 
       setAnalyticsData({
@@ -75,9 +82,17 @@ function AnalyticsPage() {
         incomeVsExpenses: incomeVsExpenseRes.data,
         summary: summaryRes.data
       });
+
+      // Combine all transactions for filtering
+      const allTxns = [
+        ...incomesRes.data.map(t => ({ ...t, type: 'income', date: t.transactionDate || t.createdAt, amount: parseFloat(t.amount || 0) })),
+        ...expensesRes.data.map(t => ({ ...t, type: 'expense', date: t.transactionDate || t.createdAt, amount: parseFloat(t.amount || 0) }))
+      ];
+      setTransactions(allTxns);
+      updateFilteredSummary(allTxns, 'all');
+      
     } catch (error) {
       console.error('Error fetching analytics data:', error);
-      // Set fallback data if API fails
       setAnalyticsData({
         monthlySpending: { labels: [], data: [] },
         categoryBreakdown: { labels: [], data: [] },
@@ -95,6 +110,29 @@ function AnalyticsPage() {
       setLoading(false);
     }
   };
+
+  const updateFilteredSummary = (txns, type) => {
+    let filtered = txns;
+    
+    if (type !== 'all') {
+      filtered = filtered.filter(t => t.type === type);
+    }
+    
+    const income = filtered.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const expense = filtered.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    
+    setFilteredSummary({
+      income,
+      expense,
+      net: income - expense
+    });
+  };
+
+
+
+  useEffect(() => {
+    updateFilteredSummary(transactions, transactionType);
+  }, [transactionType, transactions]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -130,11 +168,15 @@ function AnalyticsPage() {
     ],
   };
 
+  // Filter out categories with zero or null values
   const categoryChartData = {
-    labels: analyticsData.categoryBreakdown.labels || [],
+    labels: (analyticsData.categoryBreakdown.labels || []).filter((label, index) => {
+      const value = (analyticsData.categoryBreakdown.data || [])[index];
+      return value && value > 0;
+    }),
     datasets: [
       {
-        data: analyticsData.categoryBreakdown.data || [],
+        data: (analyticsData.categoryBreakdown.data || []).filter(value => value && value > 0),
         backgroundColor: [
           '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
           '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
@@ -204,27 +246,50 @@ function AnalyticsPage() {
       }}>
         <Sidebar />
         <div style={{ flex: 1, maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
-            <div style={{ textAlign: "center", flex: 1 }}>
-              <h1 style={{ color: "#333", margin: 0, fontSize: "28px", fontWeight: "700" }}>Financial Analytics Dashboard</h1>
-              <p style={{ color: "#666", margin: "8px 0 0 0", fontSize: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "35px", flexWrap: "wrap", gap: "20px" }}>
+            <div style={{ flex: 1, minWidth: "300px" }}>
+              <h1 style={{ color: "#1f2937", margin: 0, fontSize: "36px", fontWeight: "800", letterSpacing: '-0.5px' }}>📊 Financial Analytics</h1>
+              <p style={{ color: "#6b7280", margin: "10px 0 0 0", fontSize: "15px", fontWeight: "400" }}>
                 Welcome back, {profile?.name || profile?.username || 'User'}! Here are your financial insights.
               </p>
             </div>
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+              <select 
+                value={transactionType} 
+                onChange={(e) => setTransactionType(e.target.value)} 
+                style={{
+                  padding: "10px 16px", borderRadius: "12px", border: "2px solid #e5e7eb",
+                  fontSize: "14px", background: "white", cursor: "pointer", fontWeight: "600",
+                  color: "#374151", transition: "all 0.2s"
+                }}>
+                <option value="all">All Transactions</option>
+                <option value="income">Income Only</option>
+                <option value="expense">Expenses Only</option>
+              </select>
+              
               <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} style={{
-                padding: "8px 12px", borderRadius: "6px", border: "1px solid #ddd",
-                fontSize: "14px", background: "white"
+                padding: "8px 12px", borderRadius: "10px", border: "2px solid #e5e7eb",
+                fontSize: "14px", background: "white", cursor: "pointer", fontWeight: "500",
+                color: "#374151"
               }}>
                 <option value="1month">Last Month</option>
                 <option value="3months">Last 3 Months</option>
                 <option value="6months">Last 6 Months</option>
                 <option value="1year">Last Year</option>
               </select>
-              <button onClick={() => setShowExportModal(true)} style={{
-                background: "#f8f9fa", color: "#333", border: "1px solid #ddd",
-                padding: "8px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px"
-              }}>Export Data</button>
+              
+              <button onClick={() => window.print()} style={{
+                background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", color: "white", border: "none",
+                padding: "10px 20px", borderRadius: "12px", cursor: "pointer", fontSize: "14px",
+                fontWeight: "600", boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)"
+              }}>📝 Export PDF</button>
+              
+              <button onClick={fetchAnalyticsData} style={{
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "white", border: "none",
+                padding: "10px 20px", borderRadius: "12px", cursor: "pointer", fontSize: "14px",
+                fontWeight: "600", boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                transition: "all 0.2s"
+              }}>🔄 Refresh</button>
             </div>
           </div>
           
@@ -234,16 +299,47 @@ function AnalyticsPage() {
             </div>
           ) : (
             <>
+              {/* Filtered Transaction Summary Banner */}
+              {transactionType !== 'all' && (
+                <div style={{
+                  background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                  padding: "20px 30px",
+                  borderRadius: "16px",
+                  color: "white",
+                  marginBottom: "25px",
+                  boxShadow: "0 8px 20px rgba(240,147,251,0.3)"
+                }}>
+                  <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "10px", opacity: 0.9 }}>
+                    Filtered View: {transactionType.charAt(0).toUpperCase() + transactionType.slice(1)}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
+                    <div>
+                      <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "4px" }}>Income</div>
+                      <div style={{ fontSize: "24px", fontWeight: "700" }}>₹{filteredSummary.income.toFixed(0)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "4px" }}>Expenses</div>
+                      <div style={{ fontSize: "24px", fontWeight: "700" }}>₹{filteredSummary.expense.toFixed(0)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "4px" }}>Net</div>
+                      <div style={{ fontSize: "24px", fontWeight: "700" }}>₹{filteredSummary.net.toFixed(0)}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Financial Health Overview */}
               <div style={{
                 background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                padding: "30px",
-                borderRadius: "20px",
+                padding: "35px",
+                borderRadius: "24px",
                 color: "white",
-                marginBottom: "25px",
-                textAlign: "center"
+                marginBottom: "32px",
+                textAlign: "center",
+                boxShadow: "0 8px 32px rgba(102, 126, 234, 0.25)"
               }}>
-                <h2 style={{ margin: "0 0 20px 0", fontSize: "20px" }}>Financial Health Overview</h2>
+                <h2 style={{ margin: "0 0 24px 0", fontSize: "22px", fontWeight: "700" }}>💼 Financial Health Overview</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
                   <div>
                     <div style={{ fontSize: "28px", fontWeight: "700", marginBottom: "5px" }}>₹{analyticsData.summary.totalIncome?.toFixed(0) || '0'}</div>
@@ -266,23 +362,80 @@ function AnalyticsPage() {
               </div>
 
               {/* Advanced Metrics */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px", marginBottom: "25px" }}>
-                <div style={{ background: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
-                  <h4 style={{ margin: "0 0 10px 0", color: "#333" }}>Savings Rate</h4>
-                  <div style={{ fontSize: "24px", fontWeight: "700", color: "#4CAF50" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px", marginBottom: "32px" }}>
+                <div style={{ 
+                  background: "white", 
+                  padding: "24px", 
+                  borderRadius: "16px", 
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                  borderLeft: "5px solid #4CAF50"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "#666", fontSize: "13px", fontWeight: "600" }}>SAVINGS RATE</h4>
+                    <span style={{ fontSize: "20px" }}>📈</span>
+                  </div>
+                  <div style={{ fontSize: "28px", fontWeight: "700", color: "#4CAF50" }}>
                     {analyticsData.summary.totalIncome > 0 ? (((analyticsData.summary.netSavings || 0) / analyticsData.summary.totalIncome) * 100).toFixed(1) : '0.0'}%
                   </div>
-                </div>
-                <div style={{ background: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
-                  <h4 style={{ margin: "0 0 10px 0", color: "#333" }}>This Month Expenses</h4>
-                  <div style={{ fontSize: "24px", fontWeight: "700", color: "#FF6B6B" }}>
-                    ₹{analyticsData.summary.currentMonthExpenses?.toFixed(0) || '0'}
+                  <div style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
+                    {analyticsData.summary.totalIncome > 0 && (((analyticsData.summary.netSavings || 0) / analyticsData.summary.totalIncome) * 100) > 20 ? '✨ Excellent!' : 'Keep improving'}
                   </div>
                 </div>
-                <div style={{ background: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
-                  <h4 style={{ margin: "0 0 10px 0", color: "#333" }}>Top Category</h4>
-                  <div style={{ fontSize: "18px", fontWeight: "700", color: "#FF9800" }}>
+                
+                <div style={{ 
+                  background: "white", 
+                  padding: "20px", 
+                  borderRadius: "12px", 
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  borderLeft: "4px solid #FF6B6B"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "#666", fontSize: "13px", fontWeight: "600" }}>THIS MONTH</h4>
+                    <span style={{ fontSize: "20px" }}>📅</span>
+                  </div>
+                  <div style={{ fontSize: "28px", fontWeight: "700", color: "#FF6B6B" }}>
+                    ₹{analyticsData.summary.currentMonthExpenses?.toFixed(0) || '0'}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
+                    Income: ₹{analyticsData.summary.currentMonthIncome?.toFixed(0) || '0'}
+                  </div>
+                </div>
+                
+                <div style={{ 
+                  background: "white", 
+                  padding: "20px", 
+                  borderRadius: "12px", 
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  borderLeft: "4px solid #FF9800"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "#666", fontSize: "13px", fontWeight: "600" }}>TOP CATEGORY</h4>
+                    <span style={{ fontSize: "20px" }}>🎯</span>
+                  </div>
+                  <div style={{ fontSize: "20px", fontWeight: "700", color: "#FF9800", wordBreak: "break-word" }}>
                     {analyticsData.summary.topSpendingCategory || 'None'}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
+                    Highest spending
+                  </div>
+                </div>
+                
+                <div style={{ 
+                  background: "white", 
+                  padding: "20px", 
+                  borderRadius: "12px", 
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  borderLeft: "4px solid #667eea"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "#666", fontSize: "13px", fontWeight: "600" }}>TRANSACTIONS</h4>
+                    <span style={{ fontSize: "20px" }}>💳</span>
+                  </div>
+                  <div style={{ fontSize: "28px", fontWeight: "700", color: "#667eea" }}>
+                    {transactions.length}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
+                    Total recorded
                   </div>
                 </div>
               </div>
@@ -290,46 +443,97 @@ function AnalyticsPage() {
               {/* Monthly Spending Trend */}
               <div style={{
                 background: "white",
-                padding: "25px",
-                borderRadius: "16px",
-                boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-                marginBottom: "25px"
+                padding: "28px",
+                borderRadius: "20px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                marginBottom: "32px",
+                border: "1px solid #f3f4f6"
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                  <h3 style={{ color: "#333", margin: 0, fontSize: "18px" }}>Spending Trends Analysis</h3>
-                  <button onClick={fetchAnalyticsData} style={{
-                    background: "#f8f9fa", color: "#333", border: "1px solid #ddd",
-                    padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "12px"
-                  }}>Refresh</button>
-                </div>
+                <h3 style={{ color: "#1f2937", margin: "0 0 24px 0", fontSize: "18px", fontWeight: "700" }}>
+                  📊 Spending Trends Analysis
+                </h3>
                 <div style={{ height: "250px" }}>
-                  <Line data={monthlySpendingChartData} options={chartOptions} />
+                  {analyticsData.monthlySpending.labels.length > 0 ? (
+                    <Line data={monthlySpendingChartData} options={chartOptions} />
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#999" }}>
+                      No spending data available for the selected period
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Charts Row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                 <div style={{
                   background: "white",
-                  padding: "25px",
-                  borderRadius: "16px",
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
+                  padding: "28px",
+                  borderRadius: "20px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                  border: "1px solid #f3f4f6"
                 }}>
-                  <h3 style={{ color: "#333", margin: "0 0 15px 0", fontSize: "18px" }}>Expense Distribution</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3 style={{ color: "#1f2937", margin: 0, fontSize: "18px", fontWeight: "700" }}>🎨 Expense Distribution</h3>
+                    <select 
+                      value={categoryChartType} 
+                      onChange={(e) => setCategoryChartType(e.target.value)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '12px',
+                        background: 'white',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        color: '#374151'
+                      }}
+                    >
+                      <option value="pie">Pie Chart</option>
+                      <option value="doughnut">Doughnut Chart</option>
+                    </select>
+                  </div>
                   <div style={{ height: "250px" }}>
-                    <Pie data={categoryChartData} options={chartOptions} />
+                    {categoryChartType === 'pie' ? (
+                      <Pie data={categoryChartData} options={chartOptions} />
+                    ) : (
+                      <Doughnut data={categoryChartData} options={chartOptions} />
+                    )}
                   </div>
                 </div>
 
                 <div style={{
                   background: "white",
-                  padding: "25px",
-                  borderRadius: "16px",
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
+                  padding: "28px",
+                  borderRadius: "20px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                  border: "1px solid #f3f4f6"
                 }}>
-                  <h3 style={{ color: "#333", margin: "0 0 15px 0", fontSize: "18px" }}>Income vs Expenses</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3 style={{ color: "#1f2937", margin: 0, fontSize: "18px", fontWeight: "700" }}>📊 Income vs Expenses</h3>
+                    <select 
+                      value={incomeExpenseChartType} 
+                      onChange={(e) => setIncomeExpenseChartType(e.target.value)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '12px',
+                        background: 'white',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        color: '#374151'
+                      }}
+                    >
+                      <option value="bar">Bar Chart</option>
+                      <option value="line">Line Chart</option>
+                    </select>
+                  </div>
                   <div style={{ height: "250px" }}>
-                    <Bar data={incomeExpenseChartData} options={chartOptions} />
+                    {incomeExpenseChartType === 'bar' ? (
+                      <Bar data={incomeExpenseChartData} options={chartOptions} />
+                    ) : (
+                      <Line data={incomeExpenseChartData} options={chartOptions} />
+                    )}
                   </div>
                 </div>
               </div>

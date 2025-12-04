@@ -10,6 +10,7 @@ function AddTransactionPage() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -30,13 +31,21 @@ function AddTransactionPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (category === "Other" && !customCategory.trim()) {
+      setError("Please enter a custom category name");
+      return;
+    }
+    
     try {
       const token = localStorage.getItem("token");
+      const finalCategory = category === "Other" ? customCategory : category;
+      
       await API.post("/transactions", {
         amount: parseFloat(amount),
         description,
         type,
-        category,
+        category: finalCategory,
         date
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -205,7 +214,12 @@ function AddTransactionPage() {
 
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  if (e.target.value !== "Other") {
+                    setCustomCategory("");
+                  }
+                }}
                 required
                 style={{
                   padding: "16px 20px",
@@ -238,6 +252,25 @@ function AddTransactionPage() {
                   </>
                 )}
               </select>
+
+              {category === "Other" && (
+                <input
+                  type="text"
+                  placeholder="Enter custom category name"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  required
+                  style={{
+                    padding: "16px 20px",
+                    border: "2px solid #A084E8",
+                    borderRadius: "16px",
+                    fontSize: "16px",
+                    outline: "none",
+                    background: "rgba(160, 132, 232, 0.05)",
+                    animation: "slideDown 0.3s ease"
+                  }}
+                />
+              )}
 
               <input
                 type="date"
