@@ -16,6 +16,8 @@ function LoginPage() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.username || email.split('@')[0]);
       localStorage.setItem("userEmail", email);
+      localStorage.setItem("userId", res.data.userId);
+      console.log("Login successful, userId stored:", res.data.userId);
       setShowSuccess(true);
       setTimeout(() => {
         navigate("/");

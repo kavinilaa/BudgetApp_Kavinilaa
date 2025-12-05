@@ -398,10 +398,15 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Navbar profile={profile} />
-      <div className="analytics-page">
-        <Sidebar />
-        <div className="analytics-content">
+      <Sidebar />
+      <div style={{
+        marginLeft: "280px",
+        minHeight: "100vh",
+        background: "#E8EAF6",
+        padding: "20px"
+      }}>
+        <Navbar profile={profile} />
+        <div style={{ maxWidth: "1400px", margin: "20px auto 0" }}>
           {/* Welcome Header */}
           <div style={{ marginBottom: '25px' }}>
             <h1 style={{ marginBottom: 8, fontSize: '36px', fontWeight: '700', color: '#1f2937', letterSpacing: '-0.5px' }}>

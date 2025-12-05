@@ -54,7 +54,7 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         String token = jwtUtil.generateToken(savedUser.getEmail());
         
-        return new AuthResponse(token, "Registration successful", savedUser.getUsername());
+        return new AuthResponse(token, "Registration successful", savedUser.getUsername(), savedUser.getId());
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -66,7 +66,7 @@ public class AuthService {
         }
         
         String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponse(token, "Login successful", user.getUsername());
+        return new AuthResponse(token, "Login successful", user.getUsername(), user.getId());
     }
 
     public long getUserCount() {

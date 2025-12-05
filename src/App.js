@@ -12,6 +12,8 @@ import BudgetPage from "./pages/BudgetPage";
 import SavingsPage from "./pages/SavingsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import DashboardPage from "./pages/DashboardPage";
+import ForumPage from "./pages/ForumPage";
+import ExportPage from "./pages/ExportPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
         <Route path="/savings" element={<ProtectedRoute><SavingsPage /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
+        <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>

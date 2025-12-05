@@ -6,15 +6,14 @@ import Profile from "../components/Profile";
 function ProfilePage() {
   return (
     <>
-      <Navbar />
+      <Sidebar />
       <div style={{
-        display: "flex",
-        minHeight: "calc(100vh - 80px)"
+        marginLeft: "280px",
+        minHeight: "100vh",
+        background: "#E8EAF6"
       }}>
-        <Sidebar />
-        <div style={{ flex: 1 }}>
-          <Profile />
-        </div>
+        <Navbar />
+        <Profile />
       </div>
     </>
   );

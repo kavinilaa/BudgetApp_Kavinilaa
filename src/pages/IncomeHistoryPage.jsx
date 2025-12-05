@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 
 function IncomeHistoryPage() {
   const [profile, setProfile] = useState(null);
@@ -114,13 +115,15 @@ function IncomeHistoryPage() {
 
   return (
     <>
-      <Navbar profile={profile} />
+      <Sidebar />
       <div style={{
-        minHeight: "calc(100vh - 80px)",
-        background: "linear-gradient(135deg, #E7DDFF 0%, #F5F2FF 50%, #FFFFFF 100%)",
-        padding: "40px 20px"
+        marginLeft: "280px",
+        minHeight: "100vh",
+        background: "#E8EAF6",
+        padding: "20px"
       }}>
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        <Navbar profile={profile} />
+        <div style={{ maxWidth: "900px", margin: "20px auto 0" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <button
               type="button"

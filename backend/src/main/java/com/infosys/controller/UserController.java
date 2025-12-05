@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @RestController
@@ -96,6 +97,7 @@ public class UserController {
     @DeleteMapping("/reset-data")
     @Operation(summary = "Reset all user data", description = "Delete all transactions, budgets, and savings goals for the user")
     @SecurityRequirement(name = "Bearer Authentication")
+    @Transactional
     public ResponseEntity<?> resetUserData(@RequestHeader("Authorization") String token) {
         try {
             System.out.println("Reset data endpoint called");

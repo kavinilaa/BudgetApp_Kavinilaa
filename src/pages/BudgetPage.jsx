@@ -137,41 +137,56 @@ function BudgetPage() {
 
   return (
     <>
-      <Navbar profile={profile} />
+      <Sidebar />
       <div style={{
-        minHeight: "calc(100vh - 80px)",
-        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-        padding: "20px",
-        display: "flex",
-        gap: "20px"
+        marginLeft: "280px",
+        minHeight: "100vh",
+        background: "#E8EAF6",
+        padding: "20px"
       }}>
-        <Sidebar />
-        <div style={{ flex: 1, maxWidth: "1200px", margin: "0 auto" }}>
-          <h1 style={{ color: "#333", textAlign: "center", marginBottom: "40px" }}>Monthly Budget</h1>
+        <Navbar profile={profile} />
+        <div style={{ maxWidth: "1400px", margin: "0 auto", paddingTop: "20px" }}>
+          <h1 style={{ 
+            color: "#1A237E", 
+            textAlign: "center", 
+            marginBottom: "30px",
+            fontSize: "32px",
+            fontWeight: "700"
+          }}>Monthly Budget</h1>
           
           {/* Budget Section */}
           <div style={{
             background: "white",
             padding: "30px",
-            borderRadius: "16px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+            borderRadius: "12px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
             marginBottom: "30px"
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h2 style={{ color: "#A084E8", margin: 0 }}>Monthly Budget ({new Date().toLocaleString('default', { month: 'long' })} {currentYear})</h2>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+              <h2 style={{ 
+                color: "#5C6BC0", 
+                margin: 0,
+                fontSize: "22px",
+                fontWeight: "600"
+              }}>Monthly Budget ({new Date().toLocaleString('default', { month: 'long' })} {currentYear})</h2>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
                 {budgets.length > 0 && (
                   <button
                     onClick={() => setConfirmDeleteAll(true)}
                     style={{
-                      background: "#ff4444",
+                      background: "#F44336",
                       color: "white",
                       border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
+                      padding: "10px 18px",
+                      borderRadius: "8px",
                       cursor: "pointer",
-                      fontSize: "14px"
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      transition: "all 0.2s ease",
+                      boxShadow: "0 2px 8px rgba(244, 67, 54, 0.3)"
                     }}
+                    onMouseEnter={(e) => e.target.style.background = "#D32F2F"}
+                    onMouseLeave={(e) => e.target.style.background = "#F44336"}
                   >
                     Delete All
                   </button>
@@ -179,26 +194,38 @@ function BudgetPage() {
                 <button
                   onClick={syncBudgets}
                   style={{
-                    background: "#4caf50",
+                    background: "#26A69A",
                     border: "none",
                     padding: "10px 20px",
                     borderRadius: "8px",
                     color: "white",
-                    cursor: "pointer"
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 2px 8px rgba(38, 166, 154, 0.3)"
                   }}
+                  onMouseEnter={(e) => e.target.style.background = "#00897B"}
+                  onMouseLeave={(e) => e.target.style.background = "#26A69A"}
                 >
                   🔄 Sync
                 </button>
                 <button
                   onClick={() => setShowBudgetForm(true)}
                   style={{
-                    background: "linear-gradient(135deg, #E7DDFF, #D4C5FF)",
+                    background: "linear-gradient(135deg, #7E57C2, #673AB7)",
                     border: "none",
                     padding: "10px 20px",
                     borderRadius: "8px",
-                    color: "#333",
-                    cursor: "pointer"
+                    color: "white",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 2px 8px rgba(126, 87, 194, 0.3)"
                   }}
+                  onMouseEnter={(e) => e.target.style.transform = "translateY(-2px)"}
+                  onMouseLeave={(e) => e.target.style.transform = "translateY(0)"}
                 >
                   + Set Budget
                 </button>

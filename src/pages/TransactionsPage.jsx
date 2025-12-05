@@ -200,16 +200,15 @@ function TransactionsPage() {
 
   return (
     <>
-      <Navbar profile={profile} />
+      <Sidebar />
       <div style={{
-        minHeight: "calc(100vh - 80px)",
-        background: "linear-gradient(135deg, #E7DDFF 0%, #F5F2FF 50%, #FFFFFF 100%)",
-        padding: "20px",
-        display: "flex",
-        gap: "20px"
+        marginLeft: "280px",
+        minHeight: "100vh",
+        background: "#E8EAF6",
+        padding: "20px"
       }}>
-        <Sidebar />
-        <div style={{ flex: 1, maxWidth: "1200px", margin: "0 auto" }}>
+        <Navbar profile={profile} />
+        <div style={{ maxWidth: "1400px", margin: "20px auto 0" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <h1 style={{ color: "#4A4A4A", fontSize: "32px", fontWeight: "700", margin: "0 0 8px 0" }}>
               Transaction Dashboard

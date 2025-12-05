@@ -67,19 +67,17 @@ function AddTransactionPage() {
 
   return (
     <>
-      <Navbar profile={profile} />
+      <Sidebar />
       <div style={{
-        minHeight: "calc(100vh - 80px)",
-        background: "linear-gradient(135deg, #E7DDFF 0%, #F5F2FF 50%, #FFFFFF 100%)",
-        padding: "20px",
-        display: "flex",
-        gap: "20px"
+        marginLeft: "280px",
+        minHeight: "100vh",
+        background: "#E8EAF6",
+        padding: "20px"
       }}>
-        <Sidebar />
+        <Navbar profile={profile} />
         <div style={{
-          flex: 1,
-          maxWidth: "600px",
-          margin: "0 auto"
+          maxWidth: "700px",
+          margin: "20px auto 0"
         }}>
           <div style={{
             background: "rgba(255, 255, 255, 0.9)",

@@ -236,16 +236,15 @@ function AnalyticsPage() {
 
   return (
     <>
-      <Navbar profile={profile} />
+      <Sidebar />
       <div style={{
-        minHeight: "calc(100vh - 80px)",
-        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-        padding: "20px",
-        display: "flex",
-        gap: "20px"
+        marginLeft: "280px",
+        minHeight: "100vh",
+        background: "#E8EAF6",
+        padding: "20px"
       }}>
-        <Sidebar />
-        <div style={{ flex: 1, maxWidth: "1200px", margin: "0 auto" }}>
+        <Navbar profile={profile} />
+        <div style={{ maxWidth: "1400px", margin: "20px auto 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "35px", flexWrap: "wrap", gap: "20px" }}>
             <div style={{ flex: 1, minWidth: "300px" }}>
               <h1 style={{ color: "#1f2937", margin: 0, fontSize: "36px", fontWeight: "800", letterSpacing: '-0.5px' }}>📊 Financial Analytics</h1>
