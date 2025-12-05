@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTheme } from '../contexts/ThemeContext';
 
 function Sidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const { colors } = useTheme();
 
   const menuItems = [
     { path: "/dashboard", icon: "📊", label: "Dashboard" },
@@ -15,6 +17,7 @@ function Sidebar() {
     { path: "/forum", icon: "💬", label: "Forum" },
     { path: "/export", icon: "📥", label: "Export" },
     { path: "/ai-assistant", icon: "🤖", label: "AI Assistant" },
+    { path: "/settings", icon: "⚙️", label: "Settings" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -24,7 +27,7 @@ function Sidebar() {
       style={{
         width: "280px",
         height: "100vh",
-        background: "linear-gradient(180deg, #B3E5FC 0%, #81D4FA 50%, #4FC3F7 100%)",
+        background: colors.sidebarGradient,
         display: "flex",
         flexDirection: "column",
         padding: "24px 16px",
@@ -47,7 +50,7 @@ function Sidebar() {
         <div style={{
           width: "48px",
           height: "48px",
-          background: "#FF6B9D",
+          background: `linear-gradient(135deg, ${colors.accent}, ${colors.primaryLight})`,
           borderRadius: "12px",
           display: "flex",
           alignItems: "center",
@@ -58,9 +61,9 @@ function Sidebar() {
           margin: 0,
           fontSize: "24px",
           fontWeight: "700",
-          color: "#1A237E",
+          color: colors.primary,
           letterSpacing: "-0.5px"
-        }}>Gridlines</h2>
+        }}>BudgetLy</h2>
       </div>
 
       {/* Search Bar */}
@@ -74,7 +77,7 @@ function Sidebar() {
           top: "50%",
           transform: "translateY(-50%)",
           fontSize: "18px",
-          color: "#546E7A"
+          color: colors.textMuted
         }}>🔍</div>
         <input
           type="text"
@@ -84,24 +87,24 @@ function Sidebar() {
           style={{
             width: "100%",
             padding: "12px 12px 12px 40px",
-            border: "2px solid rgba(255, 255, 255, 0.3)",
+            border: `2px solid ${colors.border}`,
             borderRadius: "12px",
-            background: "rgba(255, 255, 255, 0.9)",
+            background: colors.inputBackground,
             fontSize: "14px",
-            color: "#263238",
+            color: colors.text,
             boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
             boxSizing: "border-box",
             outline: "none",
             transition: "all 0.2s ease"
           }}
           onFocus={(e) => {
-            e.target.style.background = "white";
-            e.target.style.borderColor = "#5C6BC0";
+            e.target.style.background = colors.surface;
+            e.target.style.borderColor = colors.primary;
             e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.12)";
           }}
           onBlur={(e) => {
-            e.target.style.background = "rgba(255, 255, 255, 0.9)";
-            e.target.style.borderColor = "rgba(255, 255, 255, 0.3)";
+            e.target.style.background = colors.inputBackground;
+            e.target.style.borderColor = colors.border;
             e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.08)";
           }}
         />
@@ -125,14 +128,14 @@ function Sidebar() {
               borderRadius: "12px",
               cursor: "pointer",
               transition: "all 0.2s ease",
-              background: isActive(item.path) ? "white" : "transparent",
-              boxShadow: isActive(item.path) ? "0 2px 8px rgba(0,0,0,0.12)" : "none",
-              color: isActive(item.path) ? "#1976D2" : "#37474F",
+              background: isActive(item.path) ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.primaryLight} 100%)` : colors.surfaceLight,
+              boxShadow: isActive(item.path) ? `0 2px 8px ${colors.shadow}` : "none",
+              color: isActive(item.path) ? colors.primary : colors.text,
               fontWeight: isActive(item.path) ? "600" : "500"
             }}
             onMouseEnter={(e) => {
               if (!isActive(item.path)) {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.6)";
+                e.currentTarget.style.background = colors.surfaceLight;
                 e.currentTarget.style.transform = "translateX(4px)";
               }
             }}
@@ -167,15 +170,15 @@ function Sidebar() {
       <div style={{
         marginTop: "16px",
         padding: "12px",
-        background: "rgba(255, 255, 255, 0.6)",
+        background: colors.surfaceLight,
         borderRadius: "10px",
         textAlign: "center",
-        border: "1px solid rgba(255, 255, 255, 0.4)"
+        border: `1px solid ${colors.border}`
       }}>
         <p style={{
           margin: 0,
           fontSize: "11px",
-          color: "#546E7A",
+          color: colors.textMuted,
           fontWeight: "500"
         }}>Budget App © 2025</p>
       </div>

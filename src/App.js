@@ -14,28 +14,38 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import DashboardPage from "./pages/DashboardPage";
 import ForumPage from "./pages/ForumPage";
 import ExportPage from "./pages/ExportPage";
+import AIAssistantPage from "./pages/AIAssistantPage";
+import SettingsPage from "./pages/SettingsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import FloatingAIButton from "./components/FloatingAIButton";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import "./styles/pageTransitions.css";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/add-transaction" element={<ProtectedRoute><AddTransactionPage /></ProtectedRoute>} />
-        <Route path="/transactions" element={<ProtectedRoute><TransactionsPage /></ProtectedRoute>} />
-        <Route path="/income-history" element={<ProtectedRoute><IncomeHistoryPage /></ProtectedRoute>} />
-        <Route path="/expense-history" element={<ProtectedRoute><ExpenseHistoryPage /></ProtectedRoute>} />
-        <Route path="/budget" element={<ProtectedRoute><BudgetPage /></ProtectedRoute>} />
-        <Route path="/savings" element={<ProtectedRoute><SavingsPage /></ProtectedRoute>} />
-        <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
-        <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <FloatingAIButton />
+        <Routes>
+          <Route path="/" element={<ProtectedRoute><div className="page-container"><HomePage /></div></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><div className="page-container"><ProfilePage /></div></ProtectedRoute>} />
+          <Route path="/add-transaction" element={<ProtectedRoute><div className="page-container"><AddTransactionPage /></div></ProtectedRoute>} />
+          <Route path="/transactions" element={<ProtectedRoute><div className="page-container"><TransactionsPage /></div></ProtectedRoute>} />
+          <Route path="/income-history" element={<ProtectedRoute><div className="page-container"><IncomeHistoryPage /></div></ProtectedRoute>} />
+          <Route path="/expense-history" element={<ProtectedRoute><div className="page-container"><ExpenseHistoryPage /></div></ProtectedRoute>} />
+          <Route path="/budget" element={<ProtectedRoute><div className="page-container"><BudgetPage /></div></ProtectedRoute>} />
+          <Route path="/savings" element={<ProtectedRoute><div className="page-container"><SavingsPage /></div></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><div className="page-container"><AnalyticsPage /></div></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><div className="page-container"><DashboardPage /></div></ProtectedRoute>} />
+          <Route path="/forum" element={<ProtectedRoute><div className="page-container"><ForumPage /></div></ProtectedRoute>} />
+          <Route path="/export" element={<ProtectedRoute><div className="page-container"><ExportPage /></div></ProtectedRoute>} />
+          <Route path="/ai-assistant" element={<ProtectedRoute><div className="page-container"><AIAssistantPage /></div></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><div className="page-container"><SettingsPage /></div></ProtectedRoute>} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

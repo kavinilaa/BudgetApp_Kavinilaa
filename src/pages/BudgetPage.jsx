@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import { useTheme } from '../contexts/ThemeContext';
 
 function BudgetPage() {
+  const { colors } = useTheme();
   const [profile, setProfile] = useState(null);
   const [budgets, setBudgets] = useState([]);
   const [currentMonth] = useState(new Date().getMonth() + 1);
@@ -136,15 +138,15 @@ function BudgetPage() {
   const categories = ["Food", "Transportation", "Entertainment", "Shopping", "Bills", "Healthcare", "Other"];
 
   return (
-    <>
+    <div style={{ display: 'flex', minHeight: '100vh', background: colors.background }}>
       <Sidebar />
-      <div style={{
-        marginLeft: "280px",
-        minHeight: "100vh",
-        background: "#E8EAF6",
-        padding: "20px"
-      }}>
-        <Navbar profile={profile} />
+      <div style={{ flex: 1, marginLeft: '280px' }}>
+        <Navbar profile={profile} title="Budget" />
+        <div style={{
+          padding: '30px',
+          background: colors.background,
+          minHeight: 'calc(100vh - 80px)'
+        }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto", paddingTop: "20px" }}>
           <h1 style={{ 
             color: "#1A237E", 
@@ -571,8 +573,9 @@ function BudgetPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 

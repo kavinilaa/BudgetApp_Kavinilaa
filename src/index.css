@@ -14,8 +14,8 @@ body {
 }
 
 input:focus {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #A084E8 !important;
+  box-shadow: 0 0 0 3px rgba(231, 221, 255, 0.1);
 }
 
 button:hover {

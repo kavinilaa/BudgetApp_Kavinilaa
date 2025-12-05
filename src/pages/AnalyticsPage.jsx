@@ -16,6 +16,7 @@ import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import API from "../services/api";
+import { useTheme } from '../contexts/ThemeContext';
 import '../Analytics.css';
 
 
@@ -32,6 +33,7 @@ ChartJS.register(
 );
 
 function AnalyticsPage() {
+  const { colors } = useTheme();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('6months');
@@ -252,15 +254,15 @@ function AnalyticsPage() {
   );
 
   return (
-    <>
+    <div style={{ display: 'flex', minHeight: '100vh', background: colors.background }}>
       <Sidebar />
-      <div style={{
-        marginLeft: "280px",
-        minHeight: "100vh",
-        background: "#E8EAF6",
-        padding: "20px"
-      }}>
-        <Navbar profile={profile} />
+      <div style={{ flex: 1, marginLeft: '280px' }}>
+        <Navbar profile={profile} title="Analytics" />
+        <div style={{
+          padding: '30px',
+          background: colors.background,
+          minHeight: 'calc(100vh - 80px)'
+        }}>
         <div style={{ maxWidth: "1400px", margin: "20px auto 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "35px", flexWrap: "wrap", gap: "20px" }}>
             <div style={{ flex: 1, minWidth: "300px" }}>
@@ -352,10 +354,10 @@ function AnalyticsPage() {
 
               {/* Financial Health Overview */}
               <div style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #E7DDFF 0%, #D4C5FF 100%)",
                 padding: "35px",
                 borderRadius: "24px",
-                color: "white",
+                color: "#4A4A4A",
                 marginBottom: "32px",
                 textAlign: "center",
                 boxShadow: "0 8px 32px rgba(102, 126, 234, 0.25)"
@@ -446,13 +448,13 @@ function AnalyticsPage() {
                   padding: "20px", 
                   borderRadius: "12px", 
                   boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  borderLeft: "4px solid #667eea"
+                  borderLeft: "4px solid #A084E8"
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                     <h4 style={{ margin: 0, color: "#666", fontSize: "13px", fontWeight: "600" }}>TRANSACTIONS</h4>
                     <span style={{ fontSize: "20px" }}>💳</span>
                   </div>
-                  <div style={{ fontSize: "28px", fontWeight: "700", color: "#667eea" }}>
+                  <div style={{ fontSize: "28px", fontWeight: "700", color: "#4A4A4A" }}>
                     {transactions.length}
                   </div>
                   <div style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
@@ -580,10 +582,10 @@ function AnalyticsPage() {
 
               {/* Financial Recommendations */}
               <div style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #E7DDFF 0%, #D4C5FF 100%)",
                 padding: "25px",
                 borderRadius: "16px",
-                color: "white",
+                color: "#4A4A4A",
                 marginTop: "25px"
               }}>
                 <h3 style={{ margin: "0 0 15px 0", fontSize: "18px" }}>Financial Recommendations</h3>
@@ -641,6 +643,7 @@ function AnalyticsPage() {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
 
@@ -668,7 +671,7 @@ function AnalyticsPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

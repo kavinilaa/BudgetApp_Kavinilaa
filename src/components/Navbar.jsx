@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from '../contexts/ThemeContext';
 
-function Navbar({ profile }) {
+function Navbar({ profile, title = "BudgetLy" }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const { colors } = useTheme();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -26,18 +28,18 @@ function Navbar({ profile }) {
       display: "flex",
       justifyContent: "space-between",
       padding: "16px 32px",
-      background: "white",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+      background: colors.surface,
+      boxShadow: `0 2px 10px ${colors.shadow}`,
       alignItems: "center",
-      borderBottom: "1px solid #e1e5e9"
+      borderBottom: `1px solid ${colors.border}`
     }}>
       <h2 style={{
         cursor: "pointer",
-        color: "#667eea",
+        color: colors.primary,
         fontSize: "24px",
         fontWeight: "700",
         margin: 0
-      }} onClick={() => navigate("/")}>Budgetly</h2>
+      }} onClick={() => navigate("/")}>{title}</h2>
 
       <div style={{ position: "relative" }} ref={dropdownRef}>
         <div 
@@ -45,7 +47,7 @@ function Navbar({ profile }) {
           onClick={() => setShowDropdown(!showDropdown)}
         >
           <span style={{
-            color: "#333",
+            color: colors.text,
             fontWeight: "500",
             fontSize: "16px"
           }}>
@@ -59,7 +61,7 @@ function Navbar({ profile }) {
               width: "40px",
               height: "40px",
               borderRadius: "50%",
-              border: "2px solid #e1e5e9",
+              border: `2px solid ${colors.border}`,
               objectFit: "cover"
             }}
           />
@@ -71,10 +73,10 @@ function Navbar({ profile }) {
             top: "100%",
             right: "0",
             marginTop: "8px",
-            background: "white",
+            background: colors.surface,
             borderRadius: "12px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
-            border: "1px solid #e1e5e9",
+            boxShadow: `0 8px 25px ${colors.shadow}`,
+            border: `1px solid ${colors.border}`,
             minWidth: "180px",
             zIndex: 1000
           }}>

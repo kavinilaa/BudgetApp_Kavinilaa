@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import { useTheme } from '../contexts/ThemeContext';
 
 function ExportPage() {
+  const { colors } = useTheme();
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState("");
 
@@ -83,18 +85,18 @@ function ExportPage() {
   };
 
   return (
-    <>
+    <div style={{ display: 'flex', minHeight: '100vh', background: colors.background }}>
       <Sidebar />
-      <div style={{ marginLeft: "280px", minHeight: "100vh", background: "#E8EAF6" }}>
-        <Navbar />
-        <div style={{ padding: "30px" }}>
+      <div style={{ flex: 1, marginLeft: '280px' }}>
+        <Navbar title="Export" />
+        <div style={{ padding: "30px", background: colors.background, minHeight: 'calc(100vh - 80px)' }}>
           {/* Header */}
           <div style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "linear-gradient(135deg, #E7DDFF 0%, #D4C5FF 100%)",
             borderRadius: "20px",
             padding: "40px",
             marginBottom: "30px",
-            color: "white"
+            color: "#4A4A4A"
           }}>
             <h1 style={{ margin: "0 0 10px 0", fontSize: "36px" }}>📥 Export & Backup</h1>
             <p style={{ margin: 0, fontSize: "16px", opacity: 0.9 }}>
@@ -119,15 +121,15 @@ function ExportPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px", marginBottom: "30px" }}>
             {/* PDF Export */}
             <div style={{
-              background: "white",
+              background: colors.cardBackground,
               borderRadius: "15px",
               padding: "30px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+              boxShadow: `0 2px 10px ${colors.shadow}`,
               transition: "all 0.3s"
             }}>
               <div style={{ fontSize: "48px", marginBottom: "15px" }}>📄</div>
-              <h3 style={{ margin: "0 0 10px 0", color: "#1A237E", fontSize: "22px" }}>PDF Report</h3>
-              <p style={{ margin: "0 0 20px 0", color: "#666", lineHeight: "1.6" }}>
+              <h3 style={{ margin: "0 0 10px 0", color: colors.text, fontSize: "22px" }}>PDF Report</h3>
+              <p style={{ margin: "0 0 20px 0", color: colors.textSecondary, lineHeight: "1.6" }}>
                 Download a comprehensive PDF report with all your transactions, budgets, and financial summary.
               </p>
               <button
@@ -155,15 +157,15 @@ function ExportPage() {
 
             {/* CSV Export */}
             <div style={{
-              background: "white",
+              background: colors.cardBackground,
               borderRadius: "15px",
               padding: "30px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+              boxShadow: `0 2px 10px ${colors.shadow}`,
               transition: "all 0.3s"
             }}>
               <div style={{ fontSize: "48px", marginBottom: "15px" }}>📊</div>
-              <h3 style={{ margin: "0 0 10px 0", color: "#1A237E", fontSize: "22px" }}>CSV Data</h3>
-              <p style={{ margin: "0 0 20px 0", color: "#666", lineHeight: "1.6" }}>
+              <h3 style={{ margin: "0 0 10px 0", color: colors.text, fontSize: "22px" }}>CSV Data</h3>
+              <p style={{ margin: "0 0 20px 0", color: colors.textSecondary, lineHeight: "1.6" }}>
                 Export your transaction data in CSV format for use in Excel, Google Sheets, or other tools.
               </p>
               <button
@@ -370,7 +372,7 @@ function ExportPage() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

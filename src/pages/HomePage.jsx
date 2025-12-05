@@ -23,7 +23,7 @@ function HomePage() {
 
   if (!profile) return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-      <div style={{ color: "#667eea", fontSize: "18px" }}>Loading...</div>
+      <div style={{ color: "#A084E8", fontSize: "18px" }}>Loading...</div>
     </div>
   );
 

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserService from '../services/UserService';
+import { useTheme } from '../contexts/ThemeContext';
 import './Profile.css';
 
 const Profile = () => {
+  const { colors } = useTheme();
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -214,7 +216,7 @@ const Profile = () => {
   if (!user) return <div className="loading">Loading...</div>;
 
   return (
-    <div className="profile-container">
+    <div className="profile-container" style={{ background: colors.background, color: colors.text }}>
       <div className="profile-header">
         <div className="profile-image-section">
           <div className="profile-image-wrapper">
@@ -263,8 +265,8 @@ const Profile = () => {
 
       <div className="profile-content">
         {/* Personal Details Section */}
-        <div className="profile-section">
-          <h2>Personal Details</h2>
+        <div className="profile-section" style={{ background: colors.cardBackground, color: colors.text }}>
+          <h2 style={{ color: colors.text }}>Personal Details</h2>
           <div className="info-grid">
             <div className="info-item">
               <label>Full Name</label>
@@ -340,8 +342,8 @@ const Profile = () => {
         </div>
 
         {/* Account Information */}
-        <div className="profile-section">
-          <h2>Account Information</h2>
+        <div className="profile-section" style={{ background: colors.cardBackground, color: colors.text }}>
+          <h2 style={{ color: colors.text }}>Account Information</h2>
           <div className="info-grid">
             <div className="info-item">
               <label>Username</label>
@@ -361,7 +363,7 @@ const Profile = () => {
         </div>
 
         {/* Danger Zone */}
-        <div className="profile-section" style={{ borderTop: '3px solid #ff4444' }}>
+        <div className="profile-section" style={{ borderTop: '3px solid #ff4444', background: colors.cardBackground, color: colors.text }}>
           <h2 style={{ color: '#ff4444' }}>⚠️ Danger Zone</h2>
           <p style={{ color: '#666', marginBottom: '20px' }}>These actions are irreversible. Please be certain before proceeding.</p>
           

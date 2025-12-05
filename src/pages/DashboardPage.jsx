@@ -5,12 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import { useTheme } from '../contexts/ThemeContext';
 import '../Analytics.css';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { colors } = useTheme();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
@@ -444,22 +446,25 @@ export default function DashboardPage() {
   );
 
   return (
-    <>
+    <div style={{ display: 'flex', minHeight: '100vh', background: colors.background }}>
       <Sidebar />
-      <div style={{
-        marginLeft: "280px",
-        minHeight: "100vh",
-        background: "#E8EAF6",
-        padding: "20px"
-      }}>
-        <Navbar profile={profile} />
-        <div style={{ maxWidth: "1400px", margin: "20px auto 0" }}>
+      <div style={{ flex: 1, marginLeft: '280px' }}>
+        <Navbar profile={profile} title="Dashboard" />
+        <div style={{
+          padding: '30px',
+          background: colors.background,
+          minHeight: 'calc(100vh - 80px)'
+        }}>
+          <div style={{
+            maxWidth: '1400px',
+            margin: '0 auto'
+          }}>
           {/* Welcome Header */}
           <div style={{ marginBottom: '25px' }}>
-            <h1 style={{ marginBottom: 8, fontSize: '36px', fontWeight: '700', color: '#1f2937', letterSpacing: '-0.5px' }}>
-              Welcome, {profile?.username || profile?.name || 'User'}! 👋
+            <h1 style={{ marginBottom: 8, fontSize: '36px', fontWeight: '700', color: colors.text, letterSpacing: '-0.5px' }}>
+              Welcome, {profile?.name || localStorage.getItem('fullName') || localStorage.getItem('username') || 'User'}! 👋
             </h1>
-            <p style={{ color: '#6b7280', fontSize: '15px', fontWeight: '400' }}>Here's your financial overview</p>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', fontWeight: '400' }}>Here's your financial overview</p>
           </div>
 
           {/* Overall Dashboard Month/Year Filter */}
@@ -470,7 +475,7 @@ export default function DashboardPage() {
             alignItems: 'center',
             flexWrap: 'wrap'
           }}>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#4A4A4A' }}>📅 Viewing:</span>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>📅 Viewing:</span>
             <select
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
@@ -531,7 +536,7 @@ export default function DashboardPage() {
               flex: '1 1 calc(25% - 18px)',
               minWidth: '240px',
               maxWidth: '280px',
-              background: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)',
+              background: `linear-gradient(135deg, ${colors.surface} 0%, #f0fdf4 100%)`,
               padding: '24px',
               borderRadius: '16px',
               boxShadow: '0 2px 8px rgba(16, 185, 129, 0.08)',
@@ -550,7 +555,7 @@ export default function DashboardPage() {
               flex: '1 1 calc(25% - 18px)',
               minWidth: '240px',
               maxWidth: '280px',
-              background: 'linear-gradient(135deg, #ffffff 0%, #fef2f2 100%)',
+              background: `linear-gradient(135deg, ${colors.surface} 0%, #fef2f2 100%)`,
               padding: '24px',
               borderRadius: '16px',
               boxShadow: '0 2px 8px rgba(239, 68, 68, 0.08)',
@@ -569,7 +574,7 @@ export default function DashboardPage() {
               flex: '1 1 calc(25% - 18px)',
               minWidth: '240px',
               maxWidth: '280px',
-              background: summary.net >= 0 ? 'linear-gradient(135deg, #ffffff 0%, #eff6ff 100%)' : 'linear-gradient(135deg, #ffffff 0%, #fff7ed 100%)',
+              background: summary.net >= 0 ? `linear-gradient(135deg, ${colors.surface} 0%, #eff6ff 100%)` : `linear-gradient(135deg, ${colors.surface} 0%, #fff7ed 100%)`,
               padding: '24px',
               borderRadius: '16px',
               boxShadow: summary.net >= 0 ? '0 2px 8px rgba(59, 130, 246, 0.08)' : '0 2px 8px rgba(251, 146, 60, 0.08)',
@@ -590,7 +595,7 @@ export default function DashboardPage() {
               flex: '1 1 calc(25% - 18px)',
               minWidth: '240px',
               maxWidth: '280px',
-              background: 'linear-gradient(135deg, #ffffff 0%, #faf5ff 100%)',
+              background: `linear-gradient(135deg, ${colors.surface} 0%, #faf5ff 100%)`,
               padding: '24px',
               borderRadius: '16px',
               boxShadow: '0 2px 8px rgba(139, 92, 246, 0.08)',
@@ -1104,8 +1109,9 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

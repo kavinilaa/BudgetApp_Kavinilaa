@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import { useTheme } from '../contexts/ThemeContext';
 
 function ForumPage() {
+  const { colors } = useTheme();
   const [posts, setPosts] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -218,18 +220,18 @@ function ForumPage() {
     : posts.filter(post => post.category === filterCategory);
 
   return (
-    <>
+    <div style={{ display: 'flex', minHeight: '100vh', background: colors.background }}>
       <Sidebar />
-      <div style={{ marginLeft: "280px", minHeight: "100vh", background: "#E8EAF6" }}>
-        <Navbar />
-        <div style={{ padding: "30px" }}>
+      <div style={{ flex: 1, marginLeft: '280px' }}>
+        <Navbar title="Forum" />
+        <div style={{ padding: "30px", background: colors.background, minHeight: 'calc(100vh - 80px)' }}>
           {/* Header */}
           <div style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "linear-gradient(135deg, #E7DDFF 0%, #D4C5FF 100%)",
             borderRadius: "20px",
             padding: "40px",
             marginBottom: "30px",
-            color: "white"
+            color: "#4A4A4A"
           }}>
             <h1 style={{ margin: "0 0 10px 0", fontSize: "36px" }}>💬 Community Forum</h1>
             <p style={{ margin: "0 0 20px 0", fontSize: "16px", opacity: 0.9 }}>
@@ -240,7 +242,7 @@ function ForumPage() {
               style={{
                 padding: "12px 30px",
                 background: "white",
-                color: "#667eea",
+                color: "#4A4A4A",
                 border: "none",
                 borderRadius: "10px",
                 fontSize: "16px",
@@ -263,9 +265,9 @@ function ForumPage() {
                 onClick={() => setFilterCategory(cat)}
                 style={{
                   padding: "8px 16px",
-                  background: filterCategory === cat ? "#667eea" : "white",
-                  color: filterCategory === cat ? "white" : "#667eea",
-                  border: "2px solid #667eea",
+                  background: filterCategory === cat ? "#A084E8" : "white",
+                  color: filterCategory === cat ? "white" : "#A084E8",
+                  border: "2px solid #A084E8",
                   borderRadius: "20px",
                   fontSize: "14px",
                   fontWeight: "600",
@@ -282,11 +284,11 @@ function ForumPage() {
           <div style={{ display: "grid", gap: "20px" }}>
             {filteredPosts.length === 0 ? (
               <div style={{
-                background: "white",
+                background: colors.cardBackground,
                 padding: "60px",
                 borderRadius: "15px",
                 textAlign: "center",
-                color: "#666"
+                color: colors.textSecondary
               }}>
                 <p style={{ fontSize: "18px", margin: 0 }}>
                   No posts yet. Be the first to start a conversation! 🎉
@@ -297,10 +299,10 @@ function ForumPage() {
                 <div
                   key={post.id}
                   style={{
-                    background: "white",
+                    background: colors.cardBackground,
                     padding: "25px",
                     borderRadius: "15px",
-                    boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+                    boxShadow: `0 2px 10px ${colors.shadow}`,
                     cursor: "pointer",
                     transition: "all 0.3s"
                   }}
@@ -368,16 +370,16 @@ function ForumPage() {
                     </div>
                   </div>
                   
-                  <h3 style={{ margin: "0 0 10px 0", color: "#1A237E", fontSize: "20px" }}>
+                  <h3 style={{ margin: "0 0 10px 0", color: colors.primary, fontSize: "20px" }}>
                     {post.title}
                   </h3>
                   
-                  <p style={{ margin: "0 0 15px 0", color: "#666", lineHeight: "1.6" }}>
+                  <p style={{ margin: "0 0 15px 0", color: colors.textSecondary, lineHeight: "1.6" }}>
                     {post.content.substring(0, 150)}{post.content.length > 150 ? "..." : ""}
                   </p>
                   
                   <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-                    <span style={{ color: "#999", fontSize: "14px" }}>
+                    <span style={{ color: colors.textSecondary, fontSize: "14px" }}>
                       👤 {post.userName}
                     </span>
                     <button
@@ -395,7 +397,7 @@ function ForumPage() {
                     >
                       ❤️ {post.likesCount || 0}
                     </button>
-                    <span style={{ color: "#666", fontSize: "14px" }}>
+                    <span style={{ color: colors.textSecondary, fontSize: "14px" }}>
                       💬 {post.comments?.length || 0} comments
                     </span>
                   </div>
@@ -421,16 +423,16 @@ function ForumPage() {
           zIndex: 1000
         }}>
           <div style={{
-            background: "white",
+            background: colors.surface,
             padding: "40px",
             borderRadius: "20px",
             width: "90%",
             maxWidth: "600px",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+            boxShadow: `0 10px 40px ${colors.shadow}`
           }}>
-            <h2 style={{ margin: "0 0 20px 0", color: "#1A237E" }}>✏️ Create New Post</h2>
+            <h2 style={{ margin: "0 0 20px 0", color: colors.text }}>✏️ Create New Post</h2>
             
-            <label style={{ display: "block", marginBottom: "10px", color: "#666", fontWeight: "600" }}>
+            <label style={{ display: "block", marginBottom: "10px", color: colors.textSecondary, fontWeight: "600" }}>
               Category
             </label>
             <select
@@ -440,9 +442,11 @@ function ForumPage() {
                 width: "100%",
                 padding: "12px",
                 marginBottom: "20px",
-                border: "2px solid #E8EAF6",
+                border: `2px solid ${colors.border}`,
                 borderRadius: "10px",
-                fontSize: "16px"
+                fontSize: "16px",
+                background: colors.inputBackground,
+                color: colors.text
               }}
             >
               {categories.filter(c => c !== "All").map(cat => (
@@ -508,7 +512,7 @@ function ForumPage() {
                 onClick={handleCreatePost}
                 style={{
                   padding: "12px 24px",
-                  background: "#667eea",
+                  background: "#A084E8",
                   color: "white",
                   border: "none",
                   borderRadius: "10px",
@@ -751,7 +755,7 @@ function ForumPage() {
                 onClick={handleAddComment}
                 style={{
                   padding: "10px 20px",
-                  background: "#667eea",
+                  background: "#A084E8",
                   color: "white",
                   border: "none",
                   borderRadius: "10px",
@@ -772,7 +776,7 @@ function ForumPage() {
                     background: "#F8F9FF",
                     padding: "15px",
                     borderRadius: "10px",
-                    borderLeft: "4px solid #667eea"
+                    borderLeft: "4px solid #A084E8"
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
@@ -792,7 +796,7 @@ function ForumPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

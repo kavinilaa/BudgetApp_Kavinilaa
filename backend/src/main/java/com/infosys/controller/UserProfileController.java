@@ -42,8 +42,8 @@ public class UserProfileController {
         if (updatedUser.getFinancialGoal() != null) user.setFinancialGoal(updatedUser.getFinancialGoal());
         if (updatedUser.getFinancialScore() != null) user.setFinancialScore(updatedUser.getFinancialScore());
         
-        userRepository.save(user);
-        return ResponseEntity.ok(user);
+        User savedUser = userRepository.save(user);
+        return ResponseEntity.ok(savedUser);
     }
 
     @PostMapping("/{username}/upload-image")

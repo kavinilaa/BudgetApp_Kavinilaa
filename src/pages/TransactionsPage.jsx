@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import { useTheme } from '../contexts/ThemeContext';
 
 function TransactionsPage() {
+  const { colors } = useTheme();
   const [profile, setProfile] = useState(null);
   const [incomes, setIncomes] = useState([]);
   const [expenses, setExpenses] = useState([]);
@@ -157,6 +159,8 @@ function TransactionsPage() {
       const txnMonth = txnDate.getMonth() + 1;
       const txnYear = txnDate.getFullYear();
       
+      console.log('Transaction:', transaction.description, 'Date:', txnDate, 'Month:', txnMonth, 'Year:', txnYear, 'Filter Month:', filterMonth, 'Filter Year:', filterYear);
+      
       if (filterMonth && txnMonth !== parseInt(filterMonth)) return false;
       if (filterYear && txnYear !== parseInt(filterYear)) return false;
       
@@ -199,15 +203,15 @@ function TransactionsPage() {
   );
 
   return (
-    <>
+    <div style={{ display: 'flex', minHeight: '100vh', background: colors.background }}>
       <Sidebar />
-      <div style={{
-        marginLeft: "280px",
-        minHeight: "100vh",
-        background: "#E8EAF6",
-        padding: "20px"
-      }}>
-        <Navbar profile={profile} />
+      <div style={{ flex: 1, marginLeft: '280px' }}>
+        <Navbar profile={profile} title="Transactions" />
+        <div style={{
+          padding: '30px',
+          background: colors.background,
+          minHeight: 'calc(100vh - 80px)'
+        }}>
         <div style={{ maxWidth: "1400px", margin: "20px auto 0" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <h1 style={{ color: "#4A4A4A", fontSize: "32px", fontWeight: "700", margin: "0 0 8px 0" }}>
@@ -237,6 +241,83 @@ function TransactionsPage() {
               textAlign: "center"
             }}>{error}</div>
           )}
+
+
+
+          {/* Summary Overview - Single Row */}
+          <div style={{
+            display: "flex",
+            gap: "16px",
+            marginBottom: "30px",
+            padding: "20px",
+            background: "rgba(255, 255, 255, 0.8)",
+            borderRadius: "16px",
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.05)",
+            justifyContent: "space-around",
+            flexWrap: "wrap"
+          }}>
+            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div>
+                <div style={{ color: "#00B894", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>💰 INCOME</div>
+                <div style={{ color: "#00B894", fontSize: "24px", fontWeight: "700" }}>₹{totalIncome.toFixed(2)}</div>
+                <div style={{ color: "#8B8B8B", fontSize: "11px" }}>{filteredIncomes.length} transaction(s)</div>
+              </div>
+              <button
+                onClick={() => navigate("/income-history")}
+                style={{
+                  background: "#00B894",
+                  color: "white",
+                  border: "none",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  fontSize: "10px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseOver={(e) => e.target.style.background = "#00A085"}
+                onMouseOut={(e) => e.target.style.background = "#00B894"}
+              >
+                View History
+              </button>
+            </div>
+            <div style={{ width: "1px", background: "#E7DDFF" }}></div>
+            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div>
+                <div style={{ color: "#FF6B6B", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>💳 EXPENSES</div>
+                <div style={{ color: "#FF6B6B", fontSize: "24px", fontWeight: "700" }}>₹{totalExpense.toFixed(2)}</div>
+                <div style={{ color: "#8B8B8B", fontSize: "11px" }}>{filteredExpenses.length} transaction(s)</div>
+              </div>
+              <button
+                onClick={() => navigate("/expense-history")}
+                style={{
+                  background: "#FF6B6B",
+                  color: "white",
+                  border: "none",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  fontSize: "10px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseOver={(e) => e.target.style.background = "#FF5252"}
+                onMouseOut={(e) => e.target.style.background = "#FF6B6B"}
+              >
+                View History
+              </button>
+            </div>
+            <div style={{ width: "1px", background: "#E7DDFF" }}></div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ color: balance >= 0 ? "#A084E8" : "#FF8C42", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                {balance >= 0 ? "📈 BALANCE" : "📉 DEFICIT"}
+              </div>
+              <div style={{ color: balance >= 0 ? "#A084E8" : "#FF8C42", fontSize: "24px", fontWeight: "700" }}>
+                ₹{Math.abs(balance).toFixed(2)}
+              </div>
+              <div style={{ color: "#8B8B8B", fontSize: "11px" }}>{balance >= 0 ? "Surplus" : "Deficit"}</div>
+            </div>
+          </div>
 
           {/* Filtering Section - Simplified */}
           <div style={{
@@ -375,6 +456,25 @@ function TransactionsPage() {
                 }}
               />
 
+              {/* Add Transaction Button */}
+              <button
+                onClick={() => navigate("/add-transaction")}
+                style={{
+                  background: "linear-gradient(135deg, #00B894, #00A085)",
+                  color: "white",
+                  padding: "10px 20px",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(0, 184, 148, 0.3)",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                + Add Transaction
+              </button>
+
               {/* Export PDF Button */}
               <button
                 onClick={() => window.print()}
@@ -431,153 +531,15 @@ function TransactionsPage() {
             )}
           </div>
 
-          {/* Summary Overview - Single Row */}
-          <div style={{
-            display: "flex",
-            gap: "16px",
-            marginBottom: "30px",
-            padding: "20px",
-            background: "rgba(255, 255, 255, 0.8)",
-            borderRadius: "16px",
-            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.05)",
-            justifyContent: "space-around",
-            flexWrap: "wrap"
-          }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "#00B894", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>💰 INCOME</div>
-              <div style={{ color: "#00B894", fontSize: "24px", fontWeight: "700" }}>₹{totalIncome.toFixed(2)}</div>
-              <div style={{ color: "#8B8B8B", fontSize: "11px" }}>{filteredIncomes.length} transaction(s)</div>
-            </div>
-            <div style={{ width: "1px", background: "#E7DDFF" }}></div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "#FF6B6B", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>💳 EXPENSES</div>
-              <div style={{ color: "#FF6B6B", fontSize: "24px", fontWeight: "700" }}>₹{totalExpense.toFixed(2)}</div>
-              <div style={{ color: "#8B8B8B", fontSize: "11px" }}>{filteredExpenses.length} transaction(s)</div>
-            </div>
-            <div style={{ width: "1px", background: "#E7DDFF" }}></div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: balance >= 0 ? "#A084E8" : "#FF8C42", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
-                {balance >= 0 ? "📈 BALANCE" : "📉 DEFICIT"}
-              </div>
-              <div style={{ color: balance >= 0 ? "#A084E8" : "#FF8C42", fontSize: "24px", fontWeight: "700" }}>
-                ₹{Math.abs(balance).toFixed(2)}
-              </div>
-              <div style={{ color: "#8B8B8B", fontSize: "11px" }}>{balance >= 0 ? "Surplus" : "Deficit"}</div>
-            </div>
-          </div>
 
-          {/* History Navigation Buttons */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-            gap: "40px",
-            maxWidth: "900px",
-            margin: "0 auto 40px auto"
-          }}>
-            <button
-              onClick={() => navigate("/income-history")}
-              style={{
-                background: "linear-gradient(135deg, #00B894, #00A085)",
-                color: "white",
-                padding: "40px 50px",
-                border: "none",
-                borderRadius: "24px",
-                fontSize: "24px",
-                fontWeight: "700",
-                cursor: "pointer",
-                boxShadow: "0 15px 35px rgba(0, 184, 148, 0.4)",
-                transition: "all 0.3s ease",
-                textAlign: "center",
-                minHeight: "120px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = "translateY(-6px)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0, 184, 148, 0.5)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 15px 35px rgba(0, 184, 148, 0.4)";
-              }}
-            >
-              Income History
-            </button>
-            
-            <button
-              onClick={() => navigate("/expense-history")}
-              style={{
-                background: "linear-gradient(135deg, #FF6B6B, #FF5252)",
-                color: "white",
-                padding: "40px 50px",
-                border: "none",
-                borderRadius: "24px",
-                fontSize: "24px",
-                fontWeight: "700",
-                cursor: "pointer",
-                boxShadow: "0 15px 35px rgba(255, 107, 107, 0.4)",
-                transition: "all 0.3s ease",
-                textAlign: "center",
-                minHeight: "120px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = "translateY(-6px)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(255, 107, 107, 0.5)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 15px 35px rgba(255, 107, 107, 0.4)";
-              }}
-            >
-              Expense History
-            </button>
-          </div>
-
-          {/* Action Buttons */}
-          <div style={{ textAlign: "center", display: "flex", gap: "20px", justifyContent: "center", flexWrap: "wrap", marginBottom: "40px" }}>
-            <button
-              onClick={() => navigate("/add-transaction")}
-              style={{
-                background: "linear-gradient(135deg, #E7DDFF 0%, #D4C5FF 100%)",
-                color: "#4A4A4A",
-                padding: "16px 32px",
-                border: "none",
-                borderRadius: "16px",
-                fontSize: "16px",
-                fontWeight: "600",
-                cursor: "pointer",
-                boxShadow: "0 8px 20px rgba(231, 221, 255, 0.4)"
-              }}
-            >
-              + Add New Transaction
-            </button>
-            <button
-              onClick={() => navigate("/analytics")}
-              style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                color: "white",
-                padding: "16px 32px",
-                border: "none",
-                borderRadius: "16px",
-                fontSize: "16px",
-                fontWeight: "600",
-                cursor: "pointer",
-                boxShadow: "0 8px 20px rgba(102, 126, 234, 0.4)"
-              }}
-            >
-              📊 View Analytics
-            </button>
-          </div>
 
           {/* Recent Transactions Section */}
-          <div style={{ marginTop: "40px" }}>
+          <div style={{ marginTop: "40px", marginBottom: "40px" }}>
             <h2 style={{ color: "#4A4A4A", fontSize: "22px", fontWeight: "700", marginBottom: "20px" }}>
               💼 Recent Transactions
             </h2>
+            
+
             
             {/* Combined Transactions Grid */}
             {(filteredIncomes.length > 0 || filteredExpenses.length > 0) && (
@@ -845,9 +807,14 @@ function TransactionsPage() {
               </div>
             )}
           </div>
+
+
+
+
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -76,7 +76,7 @@ public class ForumController {
             
             ForumPost post = new ForumPost();
             post.setUserId(user.getId());
-            post.setUserName(user.getName());
+            post.setUserName(user.getName() != null ? user.getName() : user.getUsername());
             post.setTitle(request.get("title"));
             post.setContent(request.get("content"));
             post.setCategory(request.get("category"));
@@ -116,7 +116,7 @@ public class ForumController {
             ForumComment comment = new ForumComment();
             comment.setPostId(id);
             comment.setUserId(user.getId());
-            comment.setUserName(user.getName());
+            comment.setUserName(user.getName() != null ? user.getName() : user.getUsername());
             comment.setContent(request.get("content"));
             comment.setCreatedAt(LocalDateTime.now());
             
