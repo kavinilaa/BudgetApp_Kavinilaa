@@ -15,11 +15,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
-  const [summary, setSummary] = useState({ income: 0, expenses: 0, net: 0, savingsRate: 0 });
+  const [summary, setSummary] = useState({ income: 0, expenses: 0, savings: 0, net: 0, savingsRate: 0 });
+  const [savingsGoals, setSavingsGoals] = useState([]);
   const [categoryData, setCategoryData] = useState(null);
   const [last6MonthsData, setLast6MonthsData] = useState(null);
   const [aiInsights, setAiInsights] = useState([]);
-  const [transactionFilter, setTransactionFilter] = useState('all'); // all, income, expense
+  const [transactionFilter, setTransactionFilter] = useState('all'); // all, income, expense, savings
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all'); // all, today, week, month
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
@@ -46,13 +47,14 @@ export default function DashboardPage() {
         setProfile({ name: username, username, email: 'user@example.com' });
       }
 
-      // Fetch analytics data
-      const [summaryRes, categoryRes, incomeVsExpenseRes, incomesRes, expensesRes] = await Promise.all([
+      // Fetch analytics data including savings
+      const [summaryRes, categoryRes, incomeVsExpenseRes, incomesRes, expensesRes, savingsRes] = await Promise.all([
         API.get('/analytics/summary', { headers }),
         API.get('/analytics/category-breakdown', { headers }),
         API.get('/analytics/income-vs-expenses', { headers }),
         API.get('/transactions/incomes', { headers }),
-        API.get('/transactions/expenses', { headers })
+        API.get('/transactions/expenses', { headers }),
+        API.get('/budget/savings-goals', { headers })
       ]);
 
       // Process summary data
@@ -63,6 +65,9 @@ export default function DashboardPage() {
         net: summaryData.netSavings || 0,
         savingsRate: summaryData.totalIncome > 0 ? ((summaryData.netSavings || 0) / summaryData.totalIncome * 100).toFixed(1) : 0
       });
+
+      // Set savings goals
+      setSavingsGoals(savingsRes.data || []);
 
       // Process category data for pie chart - filter out empty categories
       const categoryBreakdown = categoryRes.data;
@@ -122,12 +127,25 @@ export default function DashboardPage() {
               pointBackgroundColor: '#ef4444',
               pointBorderColor: 'white',
               pointBorderWidth: 2
+            },
+            {
+              label: 'Savings',
+              data: incomeVsExpense.savingsData || [],
+              borderColor: '#A084E8',
+              backgroundColor: 'rgba(160, 132, 232, 0.1)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 5,
+              pointBackgroundColor: '#A084E8',
+              pointBorderColor: 'white',
+              pointBorderWidth: 2
             }
           ]
         });
       }
 
-      // Combine and sort all transactions with proper date handling
+      // Combine and sort all transactions with proper date handling - include savings
       const allTransactions = [
         ...incomesRes.data.map(t => ({ 
           ...t, 
@@ -140,6 +158,14 @@ export default function DashboardPage() {
           type: 'expense', 
           date: t.transactionDate || t.createdAt,
           amount: parseFloat(t.amount || 0)
+        })),
+        ...savingsRes.data.map(t => ({ 
+          ...t, 
+          type: 'savings', 
+          date: t.updatedAt || t.createdAt,
+          amount: parseFloat(t.currentAmount || 0),
+          description: t.goalName,
+          category: 'Savings Goal'
         }))
       ].sort((a, b) => new Date(b.date) - new Date(a.date));
       
@@ -177,12 +203,17 @@ export default function DashboardPage() {
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
     
+    const monthSavings = filteredByMonth
+      .filter(t => t.type === 'savings')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
     const monthNet = monthIncome - monthExpenses;
     const monthSavingsRate = monthIncome > 0 ? ((monthNet / monthIncome) * 100).toFixed(1) : 0;
 
     setSummary({
       income: monthIncome,
       expenses: monthExpenses,
+      savings: monthSavings,
       net: monthNet,
       savingsRate: monthSavingsRate
     });
@@ -214,6 +245,7 @@ export default function DashboardPage() {
     const chartLabels = [];
     const chartIncomeData = [];
     const chartExpenseData = [];
+    const chartSavingsData = [];
     
     for (let i = 2; i >= 0; i--) {
       const targetDate = new Date(filterYear, filterMonth - 1 - i, 1);
@@ -227,10 +259,12 @@ export default function DashboardPage() {
       
       const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
       const expense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const savings = monthTransactions.filter(t => t.type === 'savings').reduce((sum, t) => sum + t.amount, 0);
       
       chartLabels.push(targetDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
       chartIncomeData.push(income);
       chartExpenseData.push(expense);
+      chartSavingsData.push(savings);
     }
     
     setLast6MonthsData({
@@ -259,6 +293,19 @@ export default function DashboardPage() {
           tension: 0.4,
           pointRadius: 5,
           pointBackgroundColor: '#ef4444',
+          pointBorderColor: 'white',
+          pointBorderWidth: 2
+        },
+        {
+          label: 'Savings',
+          data: chartSavingsData,
+          borderColor: '#A084E8',
+          backgroundColor: 'rgba(160, 132, 232, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 5,
+          pointBackgroundColor: '#A084E8',
           pointBorderColor: 'white',
           pointBorderWidth: 2
         }
@@ -553,10 +600,92 @@ export default function DashboardPage() {
                 <span style={{ fontSize: '10px', fontWeight: '700', color: '#6b7280', letterSpacing: '0.5px' }}>ACTIVE GOALS</span>
                 <span style={{ fontSize: '20px' }}>🎯</span>
               </div>
-              <div style={{ fontSize: '28px', fontWeight: '800', color: '#8b5cf6', marginBottom: '6px' }}>0</div>
+              <div style={{ fontSize: '28px', fontWeight: '800', color: '#8b5cf6', marginBottom: '6px' }}>{savingsGoals.length}</div>
               <div style={{ fontSize: '12px', color: '#7c3aed', fontWeight: '500' }}>🎪 Track your goals</div>
             </div>
           </div>
+
+          {/* Savings Goals Progress Cards */}
+          {savingsGoals.length > 0 && (
+            <div style={{ marginBottom: '40px' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>💰 Savings Goals Progress</h3>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '20px'
+              }}>
+                {savingsGoals.map(goal => {
+                  const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount * 100) : 0;
+                  const remaining = goal.targetAmount - goal.currentAmount;
+                  return (
+                    <div
+                      key={goal.id}
+                      style={{
+                        flex: '1 1 calc(33.333% - 14px)',
+                        minWidth: '280px',
+                        maxWidth: '400px',
+                        background: 'white',
+                        padding: '24px',
+                        borderRadius: '16px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                        border: '1px solid #f3f4f6'
+                      }}
+                    >
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1f2937' }}>{goal.goalName}</h4>
+                          <span style={{ fontSize: '20px' }}>💎</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                          <span>₹{goal.currentAmount.toFixed(2)} saved</span>
+                          <span>₹{goal.targetAmount.toFixed(2)} goal</span>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div style={{
+                          width: '100%',
+                          height: '12px',
+                          background: '#f3f4f6',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          position: 'relative'
+                        }}>
+                          <div style={{
+                            width: `${Math.min(progress, 100)}%`,
+                            height: '100%',
+                            background: progress >= 100 ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #6c5ce7, #a084e8)',
+                            transition: 'width 0.3s ease',
+                            borderRadius: '10px'
+                          }}></div>
+                        </div>
+                        
+                        {/* Progress Info */}
+                        <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            color: progress >= 100 ? '#10b981' : '#6c5ce7'
+                          }}>
+                            {progress.toFixed(1)}% Complete
+                          </span>
+                          {remaining > 0 && (
+                            <span style={{ fontSize: '12px', color: '#9ca3af' }}>
+                              ₹{remaining.toFixed(2)} to go
+                            </span>
+                          )}
+                          {progress >= 100 && (
+                            <span style={{ fontSize: '12px', color: '#10b981', fontWeight: '600' }}>
+                              ✓ Goal Reached!
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Charts Section */}
           <div style={{ display: 'flex', gap: '24px', marginBottom: '32px' }}>
@@ -812,6 +941,7 @@ export default function DashboardPage() {
                   <option value="all">All Types</option>
                   <option value="income">Income Only</option>
                   <option value="expense">Expenses Only</option>
+                  <option value="savings">Savings Only</option>
                 </select>
 
                 <select 
@@ -872,11 +1002,11 @@ export default function DashboardPage() {
                       <div style={{
                         width: '40px', height: '40px', borderRadius: '50%', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', fontSize: '18px',
-                        backgroundColor: txn.type === 'income' ? '#d1fae5' : '#fee2e2',
-                        color: txn.type === 'income' ? '#10b981' : '#ef4444',
+                        backgroundColor: txn.type === 'income' ? '#d1fae5' : txn.type === 'savings' ? '#e9d5ff' : '#fee2e2',
+                        color: txn.type === 'income' ? '#10b981' : txn.type === 'savings' ? '#A084E8' : '#ef4444',
                         fontWeight: 'bold'
                       }}>
-                        {txn.type === 'income' ? '↑' : '↓'}
+                        {txn.type === 'income' ? '↑' : txn.type === 'savings' ? '🎯' : '↓'}
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{fontWeight:600, color: '#1f2937', fontSize: '14px'}}>
@@ -892,10 +1022,10 @@ export default function DashboardPage() {
                     <div style={{ textAlign: 'right' }}>
                       <div style={{
                         fontWeight:700, 
-                        color: txn.type === 'income' ? '#10b981' : '#ef4444',
+                        color: txn.type === 'income' ? '#10b981' : txn.type === 'savings' ? '#A084E8' : '#ef4444',
                         fontSize: '15px'
                       }}>
-                        {txn.type === 'income' ? '+' : '-'}₹{txn.amount.toFixed(2)}
+                        {txn.type === 'income' ? '+' : txn.type === 'savings' ? '💰' : '-'}₹{txn.amount.toFixed(2)}
                       </div>
                       <div style={{
                         fontSize: '11px', 

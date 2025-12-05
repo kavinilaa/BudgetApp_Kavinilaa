@@ -97,8 +97,8 @@ public class BudgetController {
             goal.setTargetAmount(request.getTargetAmount());
             goal.setTargetDate(request.getTargetDate());
             
-            savingsGoalRepository.save(goal);
-            return ResponseEntity.ok(new MessageResponse("Savings goal created successfully"));
+            SavingsGoal savedGoal = savingsGoalRepository.save(goal);
+            return ResponseEntity.ok(savedGoal);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
         }
@@ -210,6 +210,36 @@ public class BudgetController {
             
             savingsGoalRepository.deleteById(id);
             return ResponseEntity.ok(new MessageResponse("Savings goal deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/savings-goal/{id}/add")
+    @Operation(summary = "Add money to savings goal", description = "Add money to an existing savings goal")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<?> addToSavingsGoal(
+            @PathVariable Long id,
+            @RequestBody SavingsTransferRequest request,
+            @RequestHeader("Authorization") String token) {
+        try {
+            String jwt = token.substring(7);
+            String email = jwtUtil.extractEmail(jwt);
+            Long userId = userRepository.findByEmail(email).get().getId();
+            
+            SavingsGoal goal = savingsGoalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Savings goal not found"));
+            
+            if (!goal.getUserId().equals(userId)) {
+                throw new RuntimeException("Unauthorized");
+            }
+            
+            // Update savings goal
+            goal.setCurrentAmount(goal.getCurrentAmount().add(request.getAmount()));
+            goal.setUpdatedAt(LocalDateTime.now());
+            savingsGoalRepository.save(goal);
+            
+            return ResponseEntity.ok(new MessageResponse("Amount added to savings goal successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
         }

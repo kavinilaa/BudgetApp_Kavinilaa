@@ -42,18 +42,21 @@ function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState({
     monthlySpending: { labels: [], data: [] },
     categoryBreakdown: { labels: [], data: [] },
-    incomeVsExpenses: { labels: [], incomeData: [], expenseData: [] },
+    incomeVsExpenses: { labels: [], incomeData: [], expenseData: [], savingsData: [] },
     summary: {
       totalIncome: 0,
       totalExpenses: 0,
       netSavings: 0,
+      totalSavingsGoals: 0,
+      totalSavingsTarget: 0,
+      savingsGoalsCount: 0,
       currentMonthIncome: 0,
       currentMonthExpenses: 0,
       topSpendingCategory: 'None'
     }
   });
   const [transactions, setTransactions] = useState([]);
-  const [filteredSummary, setFilteredSummary] = useState({ income: 0, expense: 0, net: 0 });
+  const [filteredSummary, setFilteredSummary] = useState({ income: 0, expense: 0, savings: 0, net: 0 });
   const navigate = useNavigate();
 
   const fetchAnalyticsData = async () => {
@@ -66,14 +69,15 @@ function AnalyticsPage() {
 
       const headers = { Authorization: `Bearer ${token}` };
       
-      // Fetch all analytics data including transactions
-      const [monthlyRes, categoryRes, incomeVsExpenseRes, summaryRes, incomesRes, expensesRes] = await Promise.all([
+      // Fetch all analytics data including transactions and savings
+      const [monthlyRes, categoryRes, incomeVsExpenseRes, summaryRes, incomesRes, expensesRes, savingsRes] = await Promise.all([
         API.get('/analytics/monthly-spending', { headers }),
         API.get('/analytics/category-breakdown', { headers }),
         API.get('/analytics/income-vs-expenses', { headers }),
         API.get('/analytics/summary', { headers }),
         API.get('/transactions/incomes', { headers }),
-        API.get('/transactions/expenses', { headers })
+        API.get('/transactions/expenses', { headers }),
+        API.get('/budget/savings-goals', { headers })
       ]);
 
       setAnalyticsData({
@@ -83,10 +87,11 @@ function AnalyticsPage() {
         summary: summaryRes.data
       });
 
-      // Combine all transactions for filtering
+      // Combine all transactions for filtering - include savings
       const allTxns = [
         ...incomesRes.data.map(t => ({ ...t, type: 'income', date: t.transactionDate || t.createdAt, amount: parseFloat(t.amount || 0) })),
-        ...expensesRes.data.map(t => ({ ...t, type: 'expense', date: t.transactionDate || t.createdAt, amount: parseFloat(t.amount || 0) }))
+        ...expensesRes.data.map(t => ({ ...t, type: 'expense', date: t.transactionDate || t.createdAt, amount: parseFloat(t.amount || 0) })),
+        ...savingsRes.data.map(t => ({ ...t, type: 'savings', date: t.updatedAt || t.createdAt, amount: parseFloat(t.currentAmount || 0), description: t.goalName }))
       ];
       setTransactions(allTxns);
       updateFilteredSummary(allTxns, 'all');
@@ -120,10 +125,12 @@ function AnalyticsPage() {
     
     const income = filtered.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
     const expense = filtered.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const savings = filtered.filter(t => t.type === 'savings').reduce((sum, t) => sum + t.amount, 0);
     
     setFilteredSummary({
       income,
       expense,
+      savings,
       net: income - expense
     });
   };
@@ -195,14 +202,24 @@ function AnalyticsPage() {
         data: analyticsData.incomeVsExpenses.incomeData || [],
         backgroundColor: '#4CAF50',
         borderColor: '#4CAF50',
-        borderWidth: 1,
+        borderWidth: 2,
+        tension: 0.4,
       },
       {
         label: 'Expenses',
         data: analyticsData.incomeVsExpenses.expenseData || [],
         backgroundColor: '#FF6B6B',
         borderColor: '#FF6B6B',
-        borderWidth: 1,
+        borderWidth: 2,
+        tension: 0.4,
+      },
+      {
+        label: 'Savings Goals',
+        data: analyticsData.incomeVsExpenses.savingsData || [],
+        backgroundColor: '#A084E8',
+        borderColor: '#A084E8',
+        borderWidth: 2,
+        tension: 0.4,
       },
     ],
   };
@@ -264,6 +281,7 @@ function AnalyticsPage() {
                 <option value="all">All Transactions</option>
                 <option value="income">Income Only</option>
                 <option value="expense">Expenses Only</option>
+                <option value="savings">Savings Only</option>
               </select>
               
               <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} style={{
@@ -311,7 +329,7 @@ function AnalyticsPage() {
                   <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "10px", opacity: 0.9 }}>
                     Filtered View: {transactionType.charAt(0).toUpperCase() + transactionType.slice(1)}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "20px" }}>
                     <div>
                       <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "4px" }}>Income</div>
                       <div style={{ fontSize: "24px", fontWeight: "700" }}>₹{filteredSummary.income.toFixed(0)}</div>
@@ -319,6 +337,10 @@ function AnalyticsPage() {
                     <div>
                       <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "4px" }}>Expenses</div>
                       <div style={{ fontSize: "24px", fontWeight: "700" }}>₹{filteredSummary.expense.toFixed(0)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "4px" }}>Savings</div>
+                      <div style={{ fontSize: "24px", fontWeight: "700" }}>₹{(filteredSummary.savings || 0).toFixed(0)}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "4px" }}>Net</div>
@@ -435,6 +457,25 @@ function AnalyticsPage() {
                   </div>
                   <div style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
                     Total recorded
+                  </div>
+                </div>
+                
+                <div style={{ 
+                  background: "white", 
+                  padding: "20px", 
+                  borderRadius: "12px", 
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  borderLeft: "4px solid #A084E8"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "#666", fontSize: "13px", fontWeight: "600" }}>SAVINGS GOALS</h4>
+                    <span style={{ fontSize: "20px" }}>🎯</span>
+                  </div>
+                  <div style={{ fontSize: "28px", fontWeight: "700", color: "#A084E8" }}>
+                    ₹{analyticsData.summary.totalSavingsGoals?.toFixed(0) || '0'}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
+                    {analyticsData.summary.savingsGoalsCount || 0} active goals
                   </div>
                 </div>
               </div>

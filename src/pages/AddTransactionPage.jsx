@@ -14,6 +14,10 @@ function AddTransactionPage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [savingsGoals, setSavingsGoals] = useState([]);
+  const [selectedGoal, setSelectedGoal] = useState("");
+  const [targetAmount, setTargetAmount] = useState("");
+  const [goalName, setGoalName] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +30,16 @@ function AddTransactionPage() {
           console.log("Profile fetch failed:", err);
           setProfile({ name: "User", email: "user@example.com" });
         });
+      
+      // Load savings goals
+      API.get("/budget/savings-goals", {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => {
+        setSavingsGoals(res.data || []);
+      }).catch(err => {
+        console.error("Error loading goals:", err);
+        setSavingsGoals([]);
+      });
     }
   }, []);
 
@@ -37,25 +51,68 @@ function AddTransactionPage() {
       return;
     }
     
+    if (type === "savings" && !selectedGoal && !goalName.trim()) {
+      setError("Please select an existing goal or enter a new goal name");
+      return;
+    }
+    
+    if (type === "savings" && !selectedGoal && !targetAmount) {
+      setError("Please enter a target amount for your new savings goal");
+      return;
+    }
+    
     try {
       const token = localStorage.getItem("token");
-      const finalCategory = category === "Other" ? customCategory : category;
       
-      await API.post("/transactions", {
-        amount: parseFloat(amount),
-        description,
-        type,
-        category: finalCategory,
-        date
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSuccess("Transaction added successfully!");
+      if (type === "savings") {
+        // Handle savings transaction
+        if (selectedGoal) {
+          // Add to existing goal
+          await API.post(`/budget/savings-goal/${selectedGoal}/add`, {
+            amount: parseFloat(amount),
+            description: description || "Savings contribution"
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } else {
+          // Create new goal and add amount
+          const newGoal = await API.post("/budget/savings-goal", {
+            goalName: goalName,
+            targetAmount: parseFloat(targetAmount),
+            targetDate: date
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          // Add initial amount to the new goal
+          await API.post(`/budget/savings-goal/${newGoal.data.id}/add`, {
+            amount: parseFloat(amount),
+            description: description || "Initial savings"
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        }
+      } else {
+        // Handle income/expense transaction
+        const finalCategory = category === "Other" ? customCategory : category;
+        
+        await API.post("/transactions", {
+          amount: parseFloat(amount),
+          description,
+          type,
+          category: finalCategory,
+          date
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      setSuccess(`${type.charAt(0).toUpperCase() + type.slice(1)} added successfully!`);
       setTimeout(() => {
         navigate("/");
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add transaction");
+      setError(err.response?.data?.message || `Failed to add ${type}`);
     }
   };
 
@@ -105,10 +162,15 @@ function AddTransactionPage() {
                 fontWeight: "700",
                 margin: "0 0 8px 0"
               }}>Add Transaction</h1>
-              <p style={{ color: "#8B8B8B", margin: 0 }}>Record your income or expense</p>
+              <p style={{ color: "#8B8B8B", margin: 0 }}>Record your income, expense, or savings</p>
               {type === "income" && (
                 <p style={{ color: "#00B894", fontSize: "12px", margin: "8px 0 0 0", fontStyle: "italic" }}>
                   💡 Include savings goal names in description to auto-update progress
+                </p>
+              )}
+              {type === "savings" && (
+                <p style={{ color: "#6C5CE7", fontSize: "12px", margin: "8px 0 0 0", fontStyle: "italic" }}>
+                  💰 Save towards your goals and track your progress
                 </p>
               )}
             </div>
@@ -143,6 +205,9 @@ function AddTransactionPage() {
                   onClick={() => {
                     setType("income");
                     setCategory("");
+                    setSelectedGoal("");
+                    setGoalName("");
+                    setTargetAmount("");
                   }}
                   style={{
                     flex: 1,
@@ -162,6 +227,9 @@ function AddTransactionPage() {
                   onClick={() => {
                     setType("expense");
                     setCategory("");
+                    setSelectedGoal("");
+                    setGoalName("");
+                    setTargetAmount("");
                   }}
                   style={{
                     flex: 1,
@@ -175,6 +243,25 @@ function AddTransactionPage() {
                   }}
                 >
                   Expense
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setType("savings");
+                    setCategory("");
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    border: type === "savings" ? "2px solid #6C5CE7" : "2px solid #E7DDFF",
+                    borderRadius: "12px",
+                    background: type === "savings" ? "rgba(108, 92, 231, 0.1)" : "rgba(231, 221, 255, 0.05)",
+                    color: type === "savings" ? "#6C5CE7" : "#8B8B8B",
+                    cursor: "pointer",
+                    fontWeight: "600"
+                  }}
+                >
+                  Savings
                 </button>
               </div>
 
@@ -210,64 +297,150 @@ function AddTransactionPage() {
                 }}
               />
 
-              <select
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  if (e.target.value !== "Other") {
-                    setCustomCategory("");
-                  }
-                }}
-                required
-                style={{
-                  padding: "16px 20px",
-                  border: "2px solid #E7DDFF",
-                  borderRadius: "16px",
-                  fontSize: "16px",
-                  outline: "none",
-                  background: "rgba(231, 221, 255, 0.05)"
-                }}
-              >
-                <option value="">Select Category</option>
-                {type === "income" ? (
-                  <>
-                    <option value="Salary">Salary</option>
-                    <option value="Freelance">Freelance</option>
-                    <option value="Business">Business</option>
-                    <option value="Investment">Investment</option>
-                    <option value="Gift">Gift</option>
-                    <option value="Other">Other</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="Food">Food</option>
-                    <option value="Transportation">Transportation</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Shopping">Shopping</option>
-                    <option value="Bills">Bills</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Other">Other</option>
-                  </>
-                )}
-              </select>
+              {type === "savings" ? (
+                <>
+                  <div style={{
+                    background: "rgba(108, 92, 231, 0.05)",
+                    padding: "20px",
+                    borderRadius: "12px",
+                    border: "2px solid rgba(108, 92, 231, 0.2)"
+                  }}>
+                    <p style={{ margin: "0 0 15px 0", fontWeight: "600", color: "#6C5CE7" }}>
+                      Select Existing Goal or Create New
+                    </p>
+                    
+                    <select
+                      value={selectedGoal}
+                      onChange={(e) => {
+                        setSelectedGoal(e.target.value);
+                        if (e.target.value) {
+                          setGoalName("");
+                          setTargetAmount("");
+                        }
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "16px 20px",
+                        border: "2px solid #E7DDFF",
+                        borderRadius: "16px",
+                        fontSize: "16px",
+                        outline: "none",
+                        background: "white",
+                        marginBottom: "15px"
+                      }}
+                    >
+                      <option value="">-- Select Existing Goal or Create New --</option>
+                      {savingsGoals.map(goal => (
+                        <option key={goal.id} value={goal.id}>
+                          {goal.goalName} (${goal.currentAmount} / ${goal.targetAmount})
+                        </option>
+                      ))}
+                    </select>
 
-              {category === "Other" && (
-                <input
-                  type="text"
-                  placeholder="Enter custom category name"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  required
-                  style={{
-                    padding: "16px 20px",
-                    border: "2px solid #A084E8",
-                    borderRadius: "16px",
-                    fontSize: "16px",
-                    outline: "none",
-                    background: "rgba(160, 132, 232, 0.05)",
-                    animation: "slideDown 0.3s ease"
-                  }}
-                />
+                    {!selectedGoal && (
+                      <>
+                        <p style={{ margin: "0 0 10px 0", fontSize: "14px", color: "#666" }}>
+                          Or create a new savings goal:
+                        </p>
+                        <input
+                          type="text"
+                          placeholder="New Goal Name (e.g., Vacation Fund)"
+                          value={goalName}
+                          onChange={(e) => setGoalName(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "16px 20px",
+                            border: "2px solid #E7DDFF",
+                            borderRadius: "16px",
+                            fontSize: "16px",
+                            outline: "none",
+                            background: "white",
+                            marginBottom: "15px",
+                            boxSizing: "border-box"
+                          }}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Target Amount"
+                          value={targetAmount}
+                          onChange={(e) => setTargetAmount(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "16px 20px",
+                            border: "2px solid #E7DDFF",
+                            borderRadius: "16px",
+                            fontSize: "16px",
+                            outline: "none",
+                            background: "white",
+                            boxSizing: "border-box"
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value);
+                      if (e.target.value !== "Other") {
+                        setCustomCategory("");
+                      }
+                    }}
+                    required
+                    style={{
+                      padding: "16px 20px",
+                      border: "2px solid #E7DDFF",
+                      borderRadius: "16px",
+                      fontSize: "16px",
+                      outline: "none",
+                      background: "rgba(231, 221, 255, 0.05)"
+                    }}
+                  >
+                    <option value="">Select Category</option>
+                    {type === "income" ? (
+                      <>
+                        <option value="Salary">Salary</option>
+                        <option value="Freelance">Freelance</option>
+                        <option value="Business">Business</option>
+                        <option value="Investment">Investment</option>
+                        <option value="Gift">Gift</option>
+                        <option value="Other">Other</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="Food">Food</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                      </>
+                    )}
+                  </select>
+
+                  {category === "Other" && (
+                    <input
+                      type="text"
+                      placeholder="Enter custom category name"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      required
+                      style={{
+                        padding: "16px 20px",
+                        border: "2px solid #A084E8",
+                        borderRadius: "16px",
+                        fontSize: "16px",
+                        outline: "none",
+                        background: "rgba(160, 132, 232, 0.05)",
+                        animation: "slideDown 0.3s ease"
+                      }}
+                    />
+                  )}
+                </>
               )}
 
               <input

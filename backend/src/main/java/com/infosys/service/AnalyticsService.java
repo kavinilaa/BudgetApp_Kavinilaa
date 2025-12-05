@@ -3,9 +3,11 @@ package com.infosys.service;
 import com.infosys.model.User;
 import com.infosys.model.Income;
 import com.infosys.model.Expense;
+import com.infosys.model.SavingsGoal;
 import com.infosys.repository.UserRepository;
 import com.infosys.repository.IncomeRepository;
 import com.infosys.repository.ExpenseRepository;
+import com.infosys.repository.SavingsGoalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,9 @@ public class AnalyticsService {
     
     @Autowired
     private ExpenseRepository expenseRepository;
+    
+    @Autowired
+    private SavingsGoalRepository savingsGoalRepository;
 
     public Map<String, Object> getMonthlySpendingData(String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
@@ -82,11 +87,13 @@ public class AnalyticsService {
         User user = userRepository.findByEmail(email).orElseThrow();
         List<Income> incomes = incomeRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
         List<Expense> expenses = expenseRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        List<SavingsGoal> savingsGoals = savingsGoalRepository.findByUserId(user.getId());
         
-        System.out.println("Income vs Expenses - Found " + incomes.size() + " incomes and " + expenses.size() + " expenses");
+        System.out.println("Income vs Expenses - Found " + incomes.size() + " incomes and " + expenses.size() + " expenses and " + savingsGoals.size() + " savings goals");
         
         Map<String, Double> monthlyIncome = new LinkedHashMap<>();
         Map<String, Double> monthlyExpenses = new LinkedHashMap<>();
+        Map<String, Double> monthlySavings = new LinkedHashMap<>();
         LocalDate sixMonthsAgo = LocalDate.now().minusMonths(6);
         
         // Initialize last 6 months
@@ -95,6 +102,7 @@ public class AnalyticsService {
             String monthKey = month.format(DateTimeFormatter.ofPattern("MMM yyyy"));
             monthlyIncome.put(monthKey, 0.0);
             monthlyExpenses.put(monthKey, 0.0);
+            monthlySavings.put(monthKey, 0.0);
         }
         
         // Aggregate income by month
@@ -111,10 +119,22 @@ public class AnalyticsService {
             monthlyExpenses.merge(monthKey, expense.getAmount(), Double::sum);
         }
         
+        // Aggregate savings by month (based on updatedAt)
+        for (SavingsGoal goal : savingsGoals) {
+            if (goal.getUpdatedAt() != null) {
+                LocalDate goalDate = goal.getUpdatedAt().toLocalDate();
+                String monthKey = goalDate.format(DateTimeFormatter.ofPattern("MMM yyyy"));
+                if (monthlySavings.containsKey(monthKey)) {
+                    monthlySavings.merge(monthKey, goal.getCurrentAmount().doubleValue(), Double::sum);
+                }
+            }
+        }
+        
         Map<String, Object> result = new HashMap<>();
         result.put("labels", new ArrayList<>(monthlyIncome.keySet()));
         result.put("incomeData", new ArrayList<>(monthlyIncome.values()));
         result.put("expenseData", new ArrayList<>(monthlyExpenses.values()));
+        result.put("savingsData", new ArrayList<>(monthlySavings.values()));
         return result;
     }
 
@@ -122,13 +142,16 @@ public class AnalyticsService {
         User user = userRepository.findByEmail(email).orElseThrow();
         List<Income> incomes = incomeRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
         List<Expense> expenses = expenseRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        List<SavingsGoal> savingsGoals = savingsGoalRepository.findByUserId(user.getId());
         
-        System.out.println("Found " + incomes.size() + " incomes and " + expenses.size() + " expenses for user: " + email);
+        System.out.println("Found " + incomes.size() + " incomes and " + expenses.size() + " expenses and " + savingsGoals.size() + " savings goals for user: " + email);
         
         LocalDate currentMonth = LocalDate.now().withDayOfMonth(1);
         
         double totalIncome = incomes.stream().mapToDouble(Income::getAmount).sum();
         double totalExpenses = expenses.stream().mapToDouble(Expense::getAmount).sum();
+        double totalSavingsGoals = savingsGoals.stream().mapToDouble(goal -> goal.getCurrentAmount().doubleValue()).sum();
+        double totalSavingsTarget = savingsGoals.stream().mapToDouble(goal -> goal.getTargetAmount().doubleValue()).sum();
         
         // Filter current month transactions
         double currentMonthIncome = incomes.stream()
@@ -159,6 +182,9 @@ public class AnalyticsService {
         result.put("totalIncome", totalIncome);
         result.put("totalExpenses", totalExpenses);
         result.put("netSavings", totalIncome - totalExpenses);
+        result.put("totalSavingsGoals", totalSavingsGoals);
+        result.put("totalSavingsTarget", totalSavingsTarget);
+        result.put("savingsGoalsCount", savingsGoals.size());
         result.put("currentMonthIncome", currentMonthIncome);
         result.put("currentMonthExpenses", currentMonthExpenses);
         result.put("currentMonthSavings", currentMonthIncome - currentMonthExpenses);
