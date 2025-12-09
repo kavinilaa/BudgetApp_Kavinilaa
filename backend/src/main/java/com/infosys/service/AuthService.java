@@ -45,7 +45,7 @@ public class AuthService {
         
         User user = new User();
         user.setUsername(username);
-        user.setName(request.getName());
+        user.setFullName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setCreatedAt(java.time.LocalDateTime.now());

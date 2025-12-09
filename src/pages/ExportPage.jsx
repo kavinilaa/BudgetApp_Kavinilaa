@@ -80,8 +80,26 @@ function ExportPage() {
     }
   };
 
-  const handleCloudBackup = (provider) => {
-    alert(`${provider} integration coming soon! This will allow you to backup your data directly to ${provider}.`);
+  const handleCloudBackup = async (provider) => {
+    if (provider === "Google Drive") {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:9090/api/cloud/google/auth", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.authUrl.includes("YOUR_GOOGLE_CLIENT_ID")) {
+          alert("⚙️ Setup Required:\n\n1. Go to Google Cloud Console\n2. Create OAuth 2.0 credentials\n3. Set environment variable: GOOGLE_CLIENT_ID\n4. Add redirect URI: http://localhost:3000/export\n\nFor now, use Export buttons to download your data.");
+        } else {
+          window.open(data.authUrl, "_blank", "width=600,height=700");
+        }
+      } catch (error) {
+        alert("Failed to connect to Google Drive");
+      }
+    } else {
+      alert(`${provider} integration coming soon!`);
+    }
   };
 
   return (

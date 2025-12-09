@@ -19,16 +19,30 @@ public class User {
     @Column(nullable = false)
     private String email;
     
+    @Column(name = "full_name")
     private String fullName;
+    
     private String mobile;
+    
+    @Column(name = "monthly_income")
     private String monthlyIncome;
+    
+    @Column(name = "preferred_currency")
     private String preferredCurrency;
+    
+    @Column(name = "financial_goal")
     private String financialGoal;
+    
+    @Column(name = "financial_score")
     private Integer financialScore;
     
     @Column(name = "profile_image", columnDefinition = "LONGTEXT")
     private String profileImage;
+    
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
     public User() {}
@@ -56,9 +70,6 @@ public class User {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-    
-    public String getName() { return fullName; }
-    public void setName(String name) { this.fullName = name; }
     
     public String getMobile() { return mobile; }
     public void setMobile(String mobile) { this.mobile = mobile; }

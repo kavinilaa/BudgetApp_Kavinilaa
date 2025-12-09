@@ -51,9 +51,7 @@ public class UserController {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
-            Profile profile = profileRepository.findByUserId(user.getId()).orElse(null);
-            
-            return ResponseEntity.ok(new UserProfileResponse(user, profile));
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Invalid token");
         }
@@ -64,7 +62,7 @@ public class UserController {
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<?> updateProfile(
             @RequestHeader("Authorization") String token,
-            @RequestBody ProfileRequest request) {
+            @RequestBody User updatedUser) {
         try {
             String jwt = token.substring(7);
             String email = jwtUtil.extractEmail(jwt);
@@ -72,24 +70,34 @@ public class UserController {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
-            Profile profile = profileRepository.findByUserId(user.getId())
-                    .orElse(new Profile());
-            
-            if (profile.getUserId() == null) {
-                profile.setUserId(user.getId());
+            if (updatedUser.getFullName() != null && !updatedUser.getFullName().isEmpty()) {
+                user.setFullName(updatedUser.getFullName());
             }
+            if (updatedUser.getEmail() != null && !updatedUser.getEmail().isEmpty()) {
+                user.setEmail(updatedUser.getEmail());
+            }
+            if (updatedUser.getMobile() != null) {
+                user.setMobile(updatedUser.getMobile());
+            }
+            if (updatedUser.getMonthlyIncome() != null) {
+                user.setMonthlyIncome(updatedUser.getMonthlyIncome());
+            }
+            if (updatedUser.getPreferredCurrency() != null) {
+                user.setPreferredCurrency(updatedUser.getPreferredCurrency());
+            }
+            if (updatedUser.getFinancialGoal() != null) {
+                user.setFinancialGoal(updatedUser.getFinancialGoal());
+            }
+            if (updatedUser.getProfileImage() != null) {
+                user.setProfileImage(updatedUser.getProfileImage());
+            }
+            user.setUpdatedAt(LocalDateTime.now());
             
-            profile.setPhone(request.getPhone());
-            profile.setAddress(request.getAddress());
-            profile.setGender(request.getGender());
-            profile.setDateOfBirth(request.getDateOfBirth());
-            profile.setOccupation(request.getOccupation());
-            profile.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
             
-            profileRepository.save(profile);
-            
-            return ResponseEntity.ok(new MessageResponse("Profile updated successfully"));
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
         }
     }
@@ -169,7 +177,7 @@ public class UserController {
         private String occupation;
         
         public UserProfileResponse(User user, Profile profile) {
-            this.name = user.getName();
+            this.name = user.getFullName();
             this.email = user.getEmail();
             if (profile != null) {
                 this.phone = profile.getPhone();

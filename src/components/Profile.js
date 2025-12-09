@@ -11,44 +11,44 @@ const Profile = () => {
   const [formData, setFormData] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [totalIncome, setTotalIncome] = useState(0);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const username = localStorage.getItem('username');
-    const email = localStorage.getItem('userEmail');
     if (!username) {
       navigate('/login');
       return;
     }
     
-    // Use localStorage data initially
-    const userData = {
-      username: username,
-      email: email,
-      fullName: localStorage.getItem('fullName') || username,
-      mobile: localStorage.getItem('mobile') || '',
-      monthlyIncome: localStorage.getItem('monthlyIncome') || '$3,000 - $5,000',
-      preferredCurrency: localStorage.getItem('preferredCurrency') || 'USD',
-      financialGoal: localStorage.getItem('financialGoal') || 'Save for a new laptop',
-      financialScore: parseInt(localStorage.getItem('financialScore')) || 75,
-      profileImage: localStorage.getItem('profileImage') || null,
-      createdAt: new Date().toISOString()
-    };
-    
-    setUser(userData);
-    setFormData(userData);
-
-    
-    // Try to fetch from backend
-    UserService.getProfile(username)
+    // Fetch profile
+    UserService.getProfile()
       .then(response => {
         setUser(response.data);
         setFormData(response.data);
+        localStorage.setItem('fullName', response.data.fullName || '');
+        if (response.data.profileImage) {
+          localStorage.setItem('profileImage', response.data.profileImage);
+        }
       })
       .catch(error => {
-        console.log('Backend not available, using localStorage data');
+        console.log('Error fetching profile:', error);
       });
+    
+    // Fetch total income
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:9090/transactions/incomes', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(incomes => {
+        if (Array.isArray(incomes)) {
+          const total = incomes.reduce((sum, income) => sum + income.amount, 0);
+          setTotalIncome(total);
+        }
+      })
+      .catch(error => console.error('Error fetching income:', error));
   }, [navigate]);
 
   const handleImageChange = (e) => {
@@ -66,40 +66,40 @@ const Profile = () => {
   const handleImageUpload = async () => {
     if (!selectedImage) return;
     
-    // Save image to localStorage as base64
+    if (selectedImage.size > 5 * 1024 * 1024) {
+      alert('❌ Image too large. Please select an image smaller than 5MB.');
+      return;
+    }
+    
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64Image = reader.result;
-      localStorage.setItem('profileImage', base64Image);
-      setUser({...user, profileImage: base64Image});
-      setSelectedImage(null);
-      setImagePreview(null);
+      
+      try {
+        const response = await UserService.updateProfile({ profileImage: base64Image });
+        setUser(response.data);
+        setSelectedImage(null);
+        setImagePreview(null);
+        localStorage.setItem('profileImage', base64Image);
+        alert('✅ Profile image updated!');
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('❌ Error: ' + (error.response?.data?.message || error.message));
+      }
     };
     reader.readAsDataURL(selectedImage);
-    
-    // Try to upload to backend
-    const formDataImg = new FormData();
-    formDataImg.append('image', selectedImage);
-    
-    try {
-      await UserService.uploadProfileImage(user.username, formDataImg);
-    } catch (error) {
-      console.log('Backend not available, image saved locally');
-    }
   };
 
   const handleDeleteImage = async () => {
-    // Remove from localStorage
-    localStorage.removeItem('profileImage');
-    setUser({...user, profileImage: null});
-    setImagePreview(null);
-    setSelectedImage(null);
-    
-    // Try to delete from backend
     try {
-      await UserService.deleteProfileImage(user.username);
+      const response = await UserService.updateProfile({ profileImage: '' });
+      setUser(response.data);
+      setImagePreview(null);
+      setSelectedImage(null);
+      alert('✅ Profile image deleted!');
     } catch (error) {
-      console.log('Backend not available, image deleted locally');
+      console.error('Error deleting image:', error);
+      alert('❌ Error deleting image');
     }
   };
 
@@ -112,23 +112,16 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      // Save to localStorage
-      localStorage.setItem('fullName', formData.fullName || '');
-      localStorage.setItem('userEmail', formData.email || '');
-      localStorage.setItem('mobile', formData.mobile || '');
-      localStorage.setItem('monthlyIncome', formData.monthlyIncome || '');
-      localStorage.setItem('preferredCurrency', formData.preferredCurrency || '');
-      localStorage.setItem('financialGoal', formData.financialGoal || '');
-      localStorage.setItem('financialScore', formData.financialScore || '75');
-      
-      // Try to save to backend
-      await UserService.updateProfile(user.username, formData);
-      setUser(formData);
+      const response = await UserService.updateProfile(formData);
+      setUser(response.data);
+      setFormData(response.data);
+      localStorage.setItem('fullName', response.data.fullName || '');
       setIsEditing(false);
+      alert('✅ Profile updated successfully!');
+      window.location.reload();
     } catch (error) {
-      console.log('Backend not available, saved locally');
-      setUser(formData);
-      setIsEditing(false);
+      console.error('Error updating profile:', error);
+      alert('❌ Error: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -150,7 +143,7 @@ const Profile = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:9090/api/user/reset-data', {
+      const response = await fetch('http://localhost:9090/user/reset-data', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -190,7 +183,7 @@ const Profile = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:9090/api/user/delete-account', {
+      const response = await fetch('http://localhost:9090/user/delete-account', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -296,17 +289,8 @@ const Profile = () => {
             </div>
             
             <div className="info-item">
-              <label>Monthly Income Range</label>
-              {isEditing ? (
-                <select name="monthlyIncome" value={formData.monthlyIncome || ''} onChange={handleInputChange} className="edit-input">
-                  <option value="$1,000 - $3,000">$1,000 - $3,000</option>
-                  <option value="$3,000 - $5,000">$3,000 - $5,000</option>
-                  <option value="$5,000 - $10,000">$5,000 - $10,000</option>
-                  <option value="$10,000+">$10,000+</option>
-                </select>
-              ) : (
-                <span>{user.monthlyIncome || 'Not provided'}</span>
-              )}
+              <label>Total Income</label>
+              <span>{user.preferredCurrency || 'INR'} {totalIncome.toFixed(2)}</span>
             </div>
             
             <div className="info-item">

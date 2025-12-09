@@ -75,7 +75,7 @@ public class ExportController {
             StringBuilder csv = new StringBuilder();
             
             // Header
-            csv.append("Financial Report - ").append(user.getName()).append("\n");
+            csv.append("Financial Report - ").append(user.getFullName()).append("\n");
             csv.append("Generated: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n\n");
             
             // Incomes section
@@ -155,7 +155,7 @@ public class ExportController {
             DeviceRgb lightBlue = new DeviceRgb(232, 234, 246);
             
             // Title
-            Paragraph title = new Paragraph("Financial Report - " + user.getName())
+            Paragraph title = new Paragraph("Financial Report - " + user.getFullName())
                     .setFontSize(24)
                     .setBold()
                     .setFontColor(primaryColor)

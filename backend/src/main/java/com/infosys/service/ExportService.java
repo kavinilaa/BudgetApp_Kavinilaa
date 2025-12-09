@@ -46,7 +46,7 @@ public class ExportService {
             Document document = new Document(pdf);
 
             // Title
-            document.add(new Paragraph("Financial Report - " + user.getName())
+            document.add(new Paragraph("Financial Report - " + user.getFullName())
                     .setFontSize(20).setBold());
             document.add(new Paragraph("Generated on: " + 
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")))

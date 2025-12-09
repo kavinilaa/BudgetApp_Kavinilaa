@@ -16,6 +16,7 @@ import ForumPage from "./pages/ForumPage";
 import ExportPage from "./pages/ExportPage";
 import AIAssistantPage from "./pages/AIAssistantPage";
 import SettingsPage from "./pages/SettingsPage";
+import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
 import FloatingAIButton from "./components/FloatingAIButton";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -27,7 +28,8 @@ function App() {
       <BrowserRouter>
         <FloatingAIButton />
         <Routes>
-          <Route path="/" element={<ProtectedRoute><div className="page-container"><HomePage /></div></ProtectedRoute>} />
+          <Route path="/" element={<OAuthCallback />} />
+          <Route path="/home" element={<ProtectedRoute><div className="page-container"><HomePage /></div></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><div className="page-container"><ProfilePage /></div></ProtectedRoute>} />
           <Route path="/add-transaction" element={<ProtectedRoute><div className="page-container"><AddTransactionPage /></div></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><div className="page-container"><TransactionsPage /></div></ProtectedRoute>} />
