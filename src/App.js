@@ -25,11 +25,11 @@ import "./styles/pageTransitions.css";
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <FloatingAIButton />
         <Routes>
-          <Route path="/" element={<OAuthCallback />} />
-          <Route path="/home" element={<ProtectedRoute><div className="page-container"><HomePage /></div></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><div className="page-container"><HomePage /></div></ProtectedRoute>} />
+          <Route path="/oauth-callback" element={<OAuthCallback />} />
           <Route path="/profile" element={<ProtectedRoute><div className="page-container"><ProfilePage /></div></ProtectedRoute>} />
           <Route path="/add-transaction" element={<ProtectedRoute><div className="page-container"><AddTransactionPage /></div></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><div className="page-container"><TransactionsPage /></div></ProtectedRoute>} />

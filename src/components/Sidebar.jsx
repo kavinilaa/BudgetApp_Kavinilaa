@@ -12,6 +12,7 @@ function Sidebar() {
     { path: "/dashboard", icon: "📊", label: "Dashboard" },
     { path: "/transactions", icon: "💳", label: "Transactions" },
     { path: "/budget", icon: "💰", label: "Budget" },
+    { path: "/savings", icon: "🏦", label: "Savings" },
     { path: "/analytics", icon: "📈", label: "Trends" },
     { path: "/profile", icon: "👤", label: "Profile" },
     { path: "/forum", icon: "💬", label: "Forum" },

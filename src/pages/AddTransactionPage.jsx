@@ -244,25 +244,7 @@ function AddTransactionPage() {
                 >
                   Expense
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setType("savings");
-                    setCategory("");
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: "12px",
-                    border: type === "savings" ? "2px solid #6C5CE7" : "2px solid #E7DDFF",
-                    borderRadius: "12px",
-                    background: type === "savings" ? "rgba(108, 92, 231, 0.1)" : "rgba(231, 221, 255, 0.05)",
-                    color: type === "savings" ? "#6C5CE7" : "#8B8B8B",
-                    cursor: "pointer",
-                    fontWeight: "600"
-                  }}
-                >
-                  Savings
-                </button>
+
               </div>
 
               <input
@@ -332,7 +314,7 @@ function AddTransactionPage() {
                       <option value="">-- Select Existing Goal or Create New --</option>
                       {savingsGoals.map(goal => (
                         <option key={goal.id} value={goal.id}>
-                          {goal.goalName} (${goal.currentAmount} / ${goal.targetAmount})
+                          {goal.goalName} (₹{goal.currentAmount} / ₹{goal.targetAmount})
                         </option>
                       ))}
                     </select>

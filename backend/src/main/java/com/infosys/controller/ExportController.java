@@ -1,37 +1,41 @@
 package com.infosys.controller;
 
-import com.infosys.model.User;
-import com.infosys.model.Income;
-import com.infosys.model.Expense;
-import com.infosys.model.Budget;
-import com.infosys.repository.UserRepository;
-import com.infosys.repository.IncomeRepository;
-import com.infosys.repository.ExpenseRepository;
-import com.infosys.repository.BudgetRepository;
-import com.infosys.config.JwtUtil;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.colors.DeviceRgb;
-import com.itextpdf.layout.properties.UnitValue;
-
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.infosys.config.JwtUtil;
+import com.infosys.model.Budget;
+import com.infosys.model.Expense;
+import com.infosys.model.Income;
+import com.infosys.model.User;
+import com.infosys.repository.BudgetRepository;
+import com.infosys.repository.ExpenseRepository;
+import com.infosys.repository.IncomeRepository;
+import com.infosys.repository.UserRepository;
+import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/export")
@@ -180,9 +184,9 @@ public class ExportController {
                     .setFontColor(primaryColor)
                     .setMarginTop(10));
             
-            document.add(new Paragraph("Total Income: $" + String.format("%.2f", totalIncome)));
-            document.add(new Paragraph("Total Expenses: $" + String.format("%.2f", totalExpense)));
-            document.add(new Paragraph("Balance: $" + String.format("%.2f", balance))
+            document.add(new Paragraph("Total Income: ₹" + String.format("%.2f", totalIncome)));
+            document.add(new Paragraph("Total Expenses: ₹" + String.format("%.2f", totalExpense)));
+            document.add(new Paragraph("Balance: ₹" + String.format("%.2f", balance))
                     .setBold()
                     .setFontSize(14)
                     .setMarginBottom(15));
@@ -208,7 +212,7 @@ public class ExportController {
                 for (Income income : incomes) {
                     incomeTable.addCell(income.getCreatedAt() != null ? income.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "N/A");
                     incomeTable.addCell(income.getCategory() != null ? income.getCategory() : "N/A");
-                    incomeTable.addCell("$" + String.format("%.2f", income.getAmount()));
+                    incomeTable.addCell("₹" + String.format("%.2f", income.getAmount()));
                     incomeTable.addCell(income.getDescription() != null ? income.getDescription() : "N/A");
                 }
                 
@@ -238,7 +242,7 @@ public class ExportController {
                 for (Expense expense : expenses) {
                     expenseTable.addCell(expense.getCreatedAt() != null ? expense.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "N/A");
                     expenseTable.addCell(expense.getCategory() != null ? expense.getCategory() : "N/A");
-                    expenseTable.addCell("$" + String.format("%.2f", expense.getAmount()));
+                    expenseTable.addCell("₹" + String.format("%.2f", expense.getAmount()));
                     expenseTable.addCell(expense.getDescription() != null ? expense.getDescription() : "N/A");
                 }
                 
@@ -270,9 +274,9 @@ public class ExportController {
                     double remaining = budget.getBudgetAmount().doubleValue() - budget.getSpentAmount().doubleValue();
                     budgetTable.addCell(budget.getMonth() + "/" + budget.getYear());
                     budgetTable.addCell(budget.getCategory());
-                    budgetTable.addCell("$" + budget.getBudgetAmount());
-                    budgetTable.addCell("$" + budget.getSpentAmount());
-                    budgetTable.addCell("$" + String.format("%.2f", remaining));
+                    budgetTable.addCell("₹" + budget.getBudgetAmount());
+                    budgetTable.addCell("₹" + budget.getSpentAmount());
+                    budgetTable.addCell("₹" + String.format("%.2f", remaining));
                 }
                 
                 document.add(budgetTable);

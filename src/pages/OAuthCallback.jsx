@@ -12,7 +12,7 @@ function OAuthCallback() {
       localStorage.setItem('google_auth_code', code);
       navigate('/export');
     } else {
-      navigate('/export');
+      navigate('/');
     }
   }, [navigate]);
 
